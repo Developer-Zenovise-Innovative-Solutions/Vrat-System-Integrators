@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { STATS, PARTNERS, SERVICES, INDUSTRIES, TESTIMONIALS, PROCESS_STEPS, WHY_VRAT } from "../data";
+import { useCMS } from "../context/CMSContext";
+import { STATS, SERVICES, INDUSTRIES, TESTIMONIALS, PROCESS_STEPS, WHY_VRAT } from "../data";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -23,8 +24,21 @@ function AnimSection({ children, className = "" }: { children: React.ReactNode; 
 }
 
 export default function Home() {
+  const { heroConfigs, partners, submitLead } = useCMS();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const homeHero = heroConfigs["home"] || {
+    heading: "Building Smarter, Safer & More Secure Environments",
+    subtitle: "VRAT System Integrators is a leading provider of integrated electronic security, surveillance, networking, and automation solutions across India.",
+    backgroundImage: "https://images.unsplash.com/photo-1551808525-51a94da548ce?w=1920&h=1080&fit=crop&auto=format",
+    primaryCtaText: "Request a Free Site Survey",
+    primaryCtaLink: "/contact",
+    secondaryCtaText: "Explore Our Solutions",
+    secondaryCtaLink: "/services",
+    showSection: true,
+  };
 
   useEffect(() => {
     const t = setInterval(() => setActiveTestimonial((p) => (p + 1) % TESTIMONIALS.length), 5000);
@@ -34,61 +48,63 @@ export default function Home() {
   return (
     <div className="overflow-x-hidden">
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center gradient-navy overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1551808525-51a94da548ce?w=1920&h=1080&fit=crop&auto=format"
-            alt="Security command center with CCTV monitoring"
-            className="w-full h-full object-cover opacity-20"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/80 to-[#162B56]/70" />
-        </div>
+      {homeHero.showSection && (
+        <section className="relative min-h-screen flex items-center gradient-navy overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={homeHero.backgroundImage || "https://images.unsplash.com/photo-1551808525-51a94da548ce?w=1920&h=1080&fit=crop&auto=format"}
+              alt="Security command center with CCTV monitoring"
+              className="w-full h-full object-cover opacity-20"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/80 to-[#162B56]/70" />
+          </div>
 
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.5) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "linear-gradient(rgba(96,165,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.5) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/15 border border-blue-400/25 mb-8 animate-fade-up">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-blue-200 text-sm font-medium tracking-wide">Trusted Security Solutions Across India</span>
-            </div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/15 border border-blue-400/25 mb-8 animate-fade-up">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                <span className="text-blue-200 text-sm font-medium tracking-wide">Trusted Security Solutions Across India</span>
+              </div>
 
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl text-white leading-tight mb-6 animate-fade-up delay-100">
-              Building Smarter, Safer &{" "}
-              <span className="text-blue-300">More Secure</span>{" "}
-              Environments
-            </h1>
+              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl text-white leading-tight mb-6 animate-fade-up delay-100">
+                {homeHero.heading}
+              </h1>
 
-            <p className="text-blue-100/80 text-xl leading-relaxed mb-10 max-w-2xl animate-fade-up delay-200">
-              VRAT System Integrators is a leading provider of integrated electronic security, surveillance, networking, and automation solutions. We deliver reliable, scalable, and future-ready systems for commercial, industrial, educational, healthcare, residential, and government sectors.
-            </p>
+              <p className="text-blue-100/80 text-lg sm:text-xl leading-relaxed mb-10 max-w-2xl animate-fade-up delay-200">
+                {homeHero.subtitle}
+              </p>
 
-            <div className="flex flex-wrap gap-4 animate-fade-up delay-300">
-              <Link
-                to="/contact"
-                className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5"
-              >
-                Request a Free Site Survey
-              </Link>
-              <Link
-                to="/services"
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all hover:-translate-y-0.5"
-              >
-                Explore Our Solutions
-              </Link>
+              <div className="flex flex-wrap gap-4 animate-fade-up delay-300">
+                <Link
+                  to={homeHero.primaryCtaLink || "/contact"}
+                  className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5"
+                >
+                  {homeHero.primaryCtaText || "Request a Free Site Survey"}
+                </Link>
+                {homeHero.secondaryCtaText && (
+                  <Link
+                    to={homeHero.secondaryCtaLink || "/services"}
+                    className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all hover:-translate-y-0.5"
+                  >
+                    {homeHero.secondaryCtaText}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 animate-bounce">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </section>
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 animate-bounce">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </section>
+      )}
 
       {/* TRUST BAR */}
       <section className="bg-white border-b border-slate-100 py-8">
@@ -380,14 +396,18 @@ export default function Home() {
             <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">Technology Partners</span>
             <h2 className="font-serif text-3xl text-slate-900 mt-3">Technology Partners We Trust</h2>
           </AnimSection>
-          <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 gap-4">
-            {PARTNERS.map((p) => (
-              <div
-                key={p}
-                className="flex items-center justify-center p-3 rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all"
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+            {partners.filter((p) => p.active !== false).map((p) => (
+              <a
+                key={p.id}
+                href={p.websiteUrl || "#"}
+                target={p.websiteUrl && p.websiteUrl.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group"
               >
-                <span className="text-slate-500 font-semibold text-xs text-center leading-tight">{p}</span>
-              </div>
+                <span className="text-slate-800 font-bold text-sm text-center leading-tight group-hover:text-blue-600 transition">{p.name}</span>
+                <span className="text-[10px] text-slate-400 font-medium mt-1">{p.category}</span>
+              </a>
             ))}
           </div>
         </div>
