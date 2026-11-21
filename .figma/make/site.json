@@ -1,0 +1,10 @@
+{
+  "description": "Delivers a fully responsive, premium enterprise website showcasing comprehensive business content with professional design, seamless navigation, and engaging visuals.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
