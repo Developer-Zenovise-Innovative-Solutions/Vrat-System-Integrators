@@ -89,9 +89,11 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-18">
             {/* Brand Logo */}
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <span className="text-white font-black text-xl tracking-tight">V</span>
-              </div>
+              <img
+                src="/logo-icon.png"
+                alt="VRAT System Integrators Logo"
+                className="w-10 h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
+              />
               <div className="leading-tight">
                 <div className={`font-bold text-base tracking-wide transition-colors ${scrolled ? "text-slate-900" : "text-white"}`}>
                   VRAT

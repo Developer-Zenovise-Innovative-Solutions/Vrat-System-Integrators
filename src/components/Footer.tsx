@@ -80,10 +80,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* Company Column */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
-                <span className="text-white font-black text-lg">V</span>
-              </div>
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src="/logo-icon.png"
+                alt="VRAT System Integrators Logo"
+                className="w-10 h-10 object-contain drop-shadow group-hover:scale-105 transition-transform"
+              />
               <div>
                 <div className="font-bold text-base text-white tracking-wide">VRAT</div>
                 <div className="text-[10px] tracking-widest uppercase text-blue-400 font-semibold">System Integrators</div>

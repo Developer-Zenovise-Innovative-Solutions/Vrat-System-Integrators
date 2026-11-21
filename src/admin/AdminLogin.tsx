@@ -53,12 +53,14 @@ export default function AdminLogin() {
       <div className="max-w-md w-full relative z-10 animate-fade-up">
         {/* Header Logo */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
-              <span className="text-white font-black text-2xl">V</span>
-            </div>
+          <Link to="/" className="inline-flex items-center gap-3.5 group">
+            <img
+              src="/logo-icon.png"
+              alt="VRAT System Integrators Logo"
+              className="w-14 h-14 object-contain drop-shadow-xl group-hover:scale-105 transition-transform"
+            />
             <div className="text-left">
-              <div className="font-bold text-xl text-white tracking-wide">VRAT</div>
+              <div className="font-bold text-2xl text-white tracking-wide">VRAT</div>
               <div className="text-xs text-blue-400 font-semibold tracking-widest uppercase">System Integrators</div>
             </div>
           </Link>

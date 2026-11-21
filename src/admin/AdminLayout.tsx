@@ -98,10 +98,12 @@ export default function AdminLayout() {
         <div>
           {/* Brand Header */}
           <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-            <Link to="/admin" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md">
-                <span className="text-white font-black text-lg">V</span>
-              </div>
+            <Link to="/admin" className="flex items-center gap-3 group">
+              <img
+                src="/logo-icon.png"
+                alt="VRAT CMS Logo"
+                className="w-9 h-9 object-contain drop-shadow group-hover:scale-105 transition-transform"
+              />
               <div>
                 <div className="font-bold text-sm text-white tracking-wide">VRAT CMS</div>
                 <div className="text-[10px] tracking-wider uppercase text-blue-400 font-semibold">Admin Panel</div>
@@ -298,8 +300,8 @@ export default function AdminLayout() {
           <aside className="relative w-72 bg-slate-950 border-r border-slate-800 flex flex-col justify-between p-4 z-10">
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white">V</div>
+                <div className="flex items-center gap-2.5">
+                  <img src="/logo-icon.png" alt="VRAT CMS Logo" className="w-8 h-8 object-contain" />
                   <span className="font-bold text-white text-sm">VRAT CMS</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="p-1.5 text-slate-400">
