@@ -23,7 +23,7 @@ function AnimSection({ children, className = "" }: { children: React.ReactNode; 
 }
 
 const CERTIFICATIONS = [
-  "ISO Certification", "MSME Registration", "GST Registration",
+  "GST Registration", "Government Vendor Compliance", "Trade License",
   "Authorized System Integrator Certifications", "OEM Partnership Certificates", "Safety Compliance Certificates",
 ];
 

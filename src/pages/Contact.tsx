@@ -204,52 +204,71 @@ export default function Contact() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Sales */}
+          {/* Business & Sales Enquiry */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
               <DollarSign className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Sales Department</h3>
+            <h3 className="font-bold text-slate-900 text-base mb-1">Business & Sales</h3>
             <p className="text-slate-500 text-xs mb-3">Quotations, product pricing & enterprise tenders.</p>
-            <a href={`mailto:${settings.salesEmail}`} className="text-blue-600 font-semibold text-xs hover:underline block">
-              {settings.salesEmail}
-            </a>
+            <div className="space-y-1">
+              <a href="mailto:Sales@vratsystem.co.in" className="text-blue-600 font-semibold text-xs hover:underline block truncate">
+                Sales@vratsystem.co.in
+              </a>
+              <a href="mailto:Nimesh.patel@vratsystem.co.in" className="text-slate-600 font-medium text-xs hover:text-blue-600 hover:underline block truncate">
+                Nimesh.patel@vratsystem.co.in
+              </a>
+              <a href="mailto:Nimeshpatel.VSI@gmail.com" className="text-slate-500 font-medium text-[11px] hover:text-blue-600 hover:underline block truncate">
+                Nimeshpatel.VSI@gmail.com
+              </a>
+            </div>
           </div>
 
-          {/* Support */}
+          {/* Customer Care & Support */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
               <Wrench className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Technical Support & AMC</h3>
-            <p className="text-slate-500 text-xs mb-3">Warranty assistance, breakdown service & AMC.</p>
-            <a href={`mailto:${settings.supportEmail}`} className="text-emerald-600 font-semibold text-xs hover:underline block">
-              {settings.supportEmail}
-            </a>
+            <h3 className="font-bold text-slate-900 text-base mb-1">Customer Care</h3>
+            <p className="text-slate-500 text-xs mb-3">Service requests, breakdown support & AMC tickets.</p>
+            <div className="space-y-1">
+              <a href="mailto:Service@vratsystem.co.in" className="text-emerald-600 font-semibold text-xs hover:underline block truncate">
+                Service@vratsystem.co.in
+              </a>
+              <a href="tel:+919510759646" className="text-slate-800 font-bold text-xs hover:text-emerald-600 block">
+                +91 95107 59646
+              </a>
+            </div>
           </div>
 
-          {/* Projects */}
+          {/* Customer Care Hotline */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
               <Building2 className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Projects & Site Survey</h3>
-            <p className="text-slate-500 text-xs mb-3">On-site technical surveys, BOQs & installation.</p>
-            <a href={`tel:${settings.phone}`} className="text-purple-600 font-semibold text-xs hover:underline block">
-              {settings.phone}
+            <h3 className="font-bold text-slate-900 text-base mb-1">Customer Care Number</h3>
+            <p className="text-slate-500 text-xs mb-3">Immediate hotline for customer queries & support.</p>
+            <a href="tel:+919510759646" className="text-purple-600 font-bold text-sm hover:underline block">
+              +91 95107 59646
             </a>
+            <div className="text-[11px] text-slate-400 mt-1">24×7 Technical Hotline</div>
           </div>
 
-          {/* HR */}
+          {/* General Inquiries */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
               <Users className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">Human Resources</h3>
-            <p className="text-slate-500 text-xs mb-3">Careers, internships, and vendor registration.</p>
-            <a href={`mailto:${settings.careersEmail}`} className="text-amber-600 font-semibold text-xs hover:underline block">
-              {settings.careersEmail}
-            </a>
+            <h3 className="font-bold text-slate-900 text-base mb-1">General Contact</h3>
+            <p className="text-slate-500 text-xs mb-3">Management, partnerships, and executive contact.</p>
+            <div className="space-y-1">
+              <a href="mailto:Nimesh.patel@vratsystem.co.in" className="text-amber-600 font-semibold text-xs hover:underline block truncate">
+                Nimesh.patel@vratsystem.co.in
+              </a>
+              <a href="mailto:Nimeshpatel.VSI@gmail.com" className="text-slate-600 font-medium text-xs hover:text-amber-600 hover:underline block truncate">
+                Nimeshpatel.VSI@gmail.com
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -508,15 +527,26 @@ export default function Contact() {
 
             {/* Corporate Address & WhatsApp Box */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 space-y-4 shadow-sm">
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
                 <MapPin className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">Corporate Headquarters</h4>
-                  <p className="text-slate-600 text-xs mt-0.5">{settings.address}</p>
-                  <p className="text-slate-600 text-xs">{settings.cityStateZip}</p>
+                  <h4 className="font-bold text-slate-900 text-sm">Head Office (Surat)</h4>
+                  <p className="text-slate-600 text-xs mt-0.5 leading-relaxed">
+                    Ground Floor, Flat No. F-1 to F-4, Vighneshwar Estate, Near Gandhi Smruti Bhavan, Nanpura, Surat, Gujarat, India – 395001.
+                  </p>
                   <div className="text-slate-400 text-[11px] mt-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {settings.businessHours}
                   </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-purple-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Branch Office (Ankleshwar)</h4>
+                  <p className="text-slate-600 text-xs mt-0.5 leading-relaxed">
+                    F-29, Asian Trade Center, Beside Asian Paints, GIDC, Ankleshwar, Gujarat, India – 393002.
+                  </p>
                 </div>
               </div>
 

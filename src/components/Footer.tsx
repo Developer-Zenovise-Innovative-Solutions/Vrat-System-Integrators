@@ -45,8 +45,8 @@ export default function Footer() {
               <Phone className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">24×7 Technical Hotline</div>
-              <a href={`tel:${settings.emergencyHotline}`} className="text-white font-bold text-sm hover:text-blue-400 transition">
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">Customer Care & Support</div>
+              <a href={`tel:${settings.phone}`} className="text-white font-bold text-sm hover:text-blue-400 transition">
                 {settings.phone}
               </a>
             </div>
@@ -57,7 +57,7 @@ export default function Footer() {
               <Mail className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">Sales & Proposals</div>
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">Business Enquiry & Sales</div>
               <a href={`mailto:${settings.salesEmail}`} className="text-white font-bold text-sm hover:text-blue-400 transition">
                 {settings.salesEmail}
               </a>
@@ -69,7 +69,7 @@ export default function Footer() {
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">Headquarters</div>
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">Head Office (Surat)</div>
               <div className="text-white font-medium text-xs truncate max-w-xs">{settings.cityStateZip}</div>
             </div>
           </div>
@@ -95,6 +95,11 @@ export default function Footer() {
             <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
               Leading provider of integrated electronic security, CCTV surveillance, fire alarms, access control, enterprise networking, and smart building automation solutions across India for over 17 years.
             </p>
+            <div className="text-[11px] text-slate-400 space-y-1 pt-2 border-t border-slate-800/60 max-w-sm">
+              <div><span className="text-slate-200 font-semibold">Head Office:</span> Nanpura, Surat, Gujarat – 395001</div>
+              <div><span className="text-slate-200 font-semibold">Branch Office:</span> GIDC, Ankleshwar, Gujarat – 393002</div>
+              <div><span className="text-slate-200 font-semibold">Customer Care:</span> +91 95107 59646 | Service@vratsystem.co.in</div>
+            </div>
             <div className="pt-2">
               <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">Subscribe to Newsletter</div>
               {newsSuccess ? (
@@ -185,7 +190,7 @@ export default function Footer() {
       <div className="border-t border-slate-800/60 py-6 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div>
-            © {new Date().getFullYear()} VRAT System Integrators. All rights reserved. Registered MSME & ISO 9001:2015 Enterprise.
+            © {new Date().getFullYear()} VRAT SYSTEM. All rights reserved.
           </div>
           <div className="flex items-center gap-4">
             <Link to="/faq" className="hover:text-slate-300">Privacy Policy</Link>

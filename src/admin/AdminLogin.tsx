@@ -12,11 +12,12 @@ import {
   EyeOff,
   Sparkles,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  KeyRound
 } from "lucide-react";
 
 export default function AdminLogin() {
-  const { login, demoLogin, isAuthenticated } = useAuth();
+  const { login, demoLogin, adminUsers } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("admin@vratsystem.com");
@@ -35,15 +36,21 @@ export default function AdminLogin() {
       if (ok) {
         navigate("/admin");
       } else {
-        setError("Invalid email or password. You can use admin@vratsystem.com / admin123 or select a demo role below.");
+        setError("Invalid credentials. Please verify your email & password or use the default credentials below.");
         setLoading(false);
       }
-    }, 400);
+    }, 350);
   };
 
   const handleQuickRole = (role: UserRole) => {
     demoLogin(role);
     navigate("/admin");
+  };
+
+  const handleFillCredentials = (fillEmail: string, fillPass: string) => {
+    setEmail(fillEmail);
+    setPassword(fillPass);
+    setError("");
   };
 
   return (
@@ -53,15 +60,15 @@ export default function AdminLogin() {
 
       <div className="max-w-md w-full relative z-10 animate-fade-up">
         {/* Header Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <Link to="/" className="inline-flex items-center gap-3.5 group">
             <img
               src={logoIcon}
-              alt="VRAT System Integrators Logo"
+              alt="VRAT SYSTEM Logo"
               className="w-14 h-14 object-contain drop-shadow-xl group-hover:scale-105 transition-transform"
             />
             <div className="text-left">
-              <div className="font-bold text-2xl text-white tracking-wide">VRAT</div>
+              <div className="font-bold text-2xl text-white tracking-wide">VRAT SYSTEM</div>
               <div className="text-xs text-blue-400 font-semibold tracking-widest uppercase">System Integrators</div>
             </div>
           </Link>
@@ -71,12 +78,34 @@ export default function AdminLogin() {
         </div>
 
         {/* Login Box */}
-        <div className="bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+        <div className="bg-slate-900/90 backdrop-blur-xl p-7 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-5">
           <div>
             <h2 className="text-2xl font-bold text-white mb-1">Sign In to Admin Panel</h2>
             <p className="text-slate-400 text-xs">
-              Manage website content, 29 pages, leads CRM, products, and services.
+              Secure administrative access to manage site content, inquiries, products, and users.
             </p>
+          </div>
+
+          {/* Quick Default Credentials Card */}
+          <div className="bg-gradient-to-r from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-2xl p-3.5 flex items-center justify-between text-xs">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-1.5 text-blue-400 font-bold uppercase tracking-wider text-[10px]">
+                <KeyRound className="w-3.5 h-3.5" /> Default Admin Login
+              </div>
+              <div className="font-mono text-slate-200 text-[11px]">
+                <span className="text-slate-400">Email:</span> <span className="font-semibold text-white">admin@vratsystem.com</span>
+              </div>
+              <div className="font-mono text-slate-200 text-[11px]">
+                <span className="text-slate-400">Pass:</span> <span className="font-semibold text-emerald-400">admin123</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleFillCredentials("admin@vratsystem.com", "admin123")}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-600/30"
+            >
+              Auto Fill
+            </button>
           </div>
 
           {error && (
@@ -109,7 +138,10 @@ export default function AdminLogin() {
                 <label className="text-xs font-semibold text-slate-300">
                   Password
                 </label>
-                <span className="text-[11px] text-blue-400 hover:underline cursor-pointer" onClick={() => alert("Default demo password is: admin123")}>
+                <span
+                  className="text-[11px] text-blue-400 hover:underline cursor-pointer"
+                  onClick={() => alert("Default password is: admin123\nOr check users in Admin Panel > Users & Roles.")}
+                >
                   Forgot Password?
                 </span>
               </div>
@@ -146,8 +178,8 @@ export default function AdminLogin() {
           {/* Quick Demo Access Roles */}
           <div className="pt-4 border-t border-slate-800 space-y-3">
             <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span className="font-semibold uppercase tracking-wider">Quick Demo Login As:</span>
-              <span className="text-blue-400 font-medium">1-Click Access</span>
+              <span className="font-semibold uppercase tracking-wider">Or 1-Click Role Access:</span>
+              <span className="text-blue-400 font-medium">Instant Preview</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -169,34 +201,10 @@ export default function AdminLogin() {
                 className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition flex items-center justify-between"
               >
                 <div>
-                  <div className="font-bold text-xs text-white">Content Manager</div>
+                  <div className="font-bold text-xs text-white">Content Lead</div>
                   <div className="text-[10px] text-slate-400">Pages & CMS</div>
                 </div>
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickRole("Sales Manager")}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition flex items-center justify-between"
-              >
-                <div>
-                  <div className="font-bold text-xs text-white">Sales / CRM</div>
-                  <div className="text-[10px] text-slate-400">Leads & Quotes</div>
-                </div>
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickRole("Support Manager")}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition flex items-center justify-between"
-              >
-                <div>
-                  <div className="font-bold text-xs text-white">Support Head</div>
-                  <div className="text-[10px] text-slate-400">Tickets & AMC</div>
-                </div>
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
               </button>
             </div>
           </div>

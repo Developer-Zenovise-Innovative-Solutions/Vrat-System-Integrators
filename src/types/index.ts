@@ -15,6 +15,7 @@ export interface AdminUser {
   avatar?: string;
   lastLogin?: string;
   active: boolean;
+  password?: string;
 }
 
 export interface ActivityLog {
@@ -264,6 +265,7 @@ export interface GlobalSettings {
   companyName: string;
   tagline: string;
   primaryEmail: string;
+  secondaryEmail?: string;
   salesEmail: string;
   supportEmail: string;
   careersEmail: string;
@@ -272,6 +274,8 @@ export interface GlobalSettings {
   whatsappNumber: string;
   address: string;
   cityStateZip: string;
+  headOfficeAddress?: string;
+  branchOfficeAddress?: string;
   businessHours: string;
   googleMapsUrl: string;
   socialLinks: {

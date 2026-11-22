@@ -172,32 +172,41 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-4 mt-4">
+          <div className="grid sm:grid-cols-4 gap-4 mt-4">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">General Info Email</label>
+              <label className="block text-slate-300 font-semibold mb-1">Primary Enquiry Email</label>
               <input
                 type="email"
                 value={formData.primaryEmail}
                 onChange={(e) => setFormData({ ...formData, primaryEmail: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Sales & Proposals Email</label>
+              <label className="block text-slate-300 font-semibold mb-1">Secondary Enquiry Email</label>
+              <input
+                type="email"
+                value={formData.secondaryEmail || ""}
+                onChange={(e) => setFormData({ ...formData, secondaryEmail: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Sales Department Email</label>
               <input
                 type="email"
                 value={formData.salesEmail}
                 onChange={(e) => setFormData({ ...formData, salesEmail: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Customer Support Email</label>
+              <label className="block text-slate-300 font-semibold mb-1">Customer Service Email</label>
               <input
                 type="email"
                 value={formData.supportEmail}
                 onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
               />
             </div>
           </div>
@@ -210,23 +219,33 @@ export default function AdminSettings() {
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Office Street Address</label>
+              <label className="block text-slate-300 font-semibold mb-1">Head Office Street Address (Surat)</label>
               <input
                 type="text"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">City, State & PIN</label>
+              <label className="block text-slate-300 font-semibold mb-1">Head Office City, State & PIN</label>
               <input
                 type="text"
                 value={formData.cityStateZip}
                 onChange={(e) => setFormData({ ...formData, cityStateZip: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
               />
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-slate-300 font-semibold mb-1">Branch Office Address (Ankleshwar)</label>
+            <input
+              type="text"
+              value={formData.branchOfficeAddress || "F-29, Asian Trade Center, Beside Asian Paints, GIDC, Ankleshwar, Gujarat, India – 393002."}
+              onChange={(e) => setFormData({ ...formData, branchOfficeAddress: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs"
+            />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-4 mt-4">

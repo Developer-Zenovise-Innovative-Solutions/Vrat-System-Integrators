@@ -328,9 +328,18 @@ export default function Support() {
                 <div className="flex items-center gap-3">
                   <PhoneCall className="w-4 h-4 text-blue-400" />
                   <div>
-                    <div className="text-slate-400">Emergency 24×7 Hotline</div>
-                    <a href={`tel:${settings.emergencyHotline}`} className="text-white font-bold hover:text-blue-300 transition">
-                      {settings.emergencyHotline}
+                    <div className="text-slate-400">Customer Care Number</div>
+                    <a href="tel:+919510759646" className="text-white font-bold hover:text-blue-300 transition text-sm">
+                      +91 95107 59646
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <PhoneCall className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <div className="text-slate-400">Customer Care Email</div>
+                    <a href="mailto:Service@vratsystem.co.in" className="text-emerald-400 font-bold hover:underline transition">
+                      Service@vratsystem.co.in
                     </a>
                   </div>
                 </div>

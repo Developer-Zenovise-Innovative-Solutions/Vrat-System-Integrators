@@ -61,7 +61,7 @@ export default function Navbar() {
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">
-            ISO 9001:2015 Certified • PAN India Operations
+            PAN India Operations • Surat (HQ) & Ankleshwar
           </span>
         </div>
         <div className="flex items-center gap-4">
