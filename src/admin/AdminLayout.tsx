@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import logoIcon from "../assets/logo/logo-icon.png";
 import { useAuth } from "../context/AuthContext";
 import { useCMS } from "../context/CMSContext";
 import {
@@ -100,7 +101,7 @@ export default function AdminLayout() {
           <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-3 group">
               <img
-                src="/logo-icon.png"
+                src={logoIcon}
                 alt="VRAT CMS Logo"
                 className="w-9 h-9 object-contain drop-shadow group-hover:scale-105 transition-transform"
               />
@@ -301,7 +302,7 @@ export default function AdminLayout() {
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <img src="/logo-icon.png" alt="VRAT CMS Logo" className="w-8 h-8 object-contain" />
+                  <img src={logoIcon} alt="VRAT CMS Logo" className="w-8 h-8 object-contain" />
                   <span className="font-bold text-white text-sm">VRAT CMS</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="p-1.5 text-slate-400">

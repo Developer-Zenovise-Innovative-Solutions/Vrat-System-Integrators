@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import logoIcon from "../assets/logo/logo-icon.png";
 import { useAuth } from "../context/AuthContext";
 import { UserRole } from "../types";
 import {
@@ -55,7 +56,7 @@ export default function AdminLogin() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3.5 group">
             <img
-              src="/logo-icon.png"
+              src={logoIcon}
               alt="VRAT System Integrators Logo"
               className="w-14 h-14 object-contain drop-shadow-xl group-hover:scale-105 transition-transform"
             />

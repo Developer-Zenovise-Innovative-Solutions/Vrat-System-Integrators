@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import logoIcon from "../assets/logo/logo-icon.png";
 import { useAuth } from "../context/AuthContext";
 import { useCMS } from "../context/CMSContext";
 import {
@@ -90,7 +91,7 @@ export default function Navbar() {
             {/* Brand Logo */}
             <Link to="/" className="flex items-center gap-3 group">
               <img
-                src="/logo-icon.png"
+                src={logoIcon}
                 alt="VRAT System Integrators Logo"
                 className="w-10 h-10 object-contain drop-shadow-sm group-hover:scale-105 transition-transform"
               />
