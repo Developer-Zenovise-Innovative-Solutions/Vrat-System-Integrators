@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 
 export default function AdminLayout() {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout } = useAuth();
   const { logs, resetToDefaults } = useCMS();
   const location = useLocation();
   const navigate = useNavigate();
@@ -239,23 +239,6 @@ export default function AdminLayout() {
                     <div className="mt-1.5 inline-block px-2 py-0.5 rounded bg-blue-600/30 text-blue-300 text-[10px] font-bold">
                       {user?.role}
                     </div>
-                  </div>
-
-                  <div className="text-[10px] text-slate-400 font-bold px-2 uppercase tracking-wider">
-                    Quick Role Switcher
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 px-1">
-                    {(["Super Admin", "Content Manager", "Sales Manager", "Support Manager"] as const).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => { switchRole(r); setShowProfileMenu(false); }}
-                        className={`text-left px-2 py-1.5 rounded text-[11px] font-semibold transition ${
-                          user?.role === r ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-900"
-                        }`}
-                      >
-                        {r.split(" ")[0]}
-                      </button>
-                    ))}
                   </div>
 
                   <div className="pt-2 border-t border-slate-800 space-y-1">

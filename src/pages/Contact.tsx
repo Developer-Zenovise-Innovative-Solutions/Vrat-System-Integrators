@@ -141,7 +141,7 @@ export default function Contact() {
       type: "Contact Inquiry",
       name: meetingForm.name,
       company: meetingForm.company,
-      email: "meeting-booking@vratsystem.com",
+      email: "Sales@vratsystem.co.in",
       message: `Scheduled Consultation: ${meetingForm.meetingType} on ${meetingForm.date} at ${meetingForm.time} regarding ${meetingForm.topic}`,
     });
 

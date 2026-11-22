@@ -190,7 +190,7 @@ export default function Footer() {
       <div className="border-t border-slate-800/60 py-6 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div>
-            © {new Date().getFullYear()} VRAT SYSTEM. All rights reserved.
+            © {new Date().getFullYear()} VRAT SYSTEM. All rights reserved. | Official Website: <a href="https://vratsystems.com/" className="text-slate-400 hover:text-blue-400 font-medium">vratsystems.com</a>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/faq" className="hover:text-slate-300">Privacy Policy</Link>

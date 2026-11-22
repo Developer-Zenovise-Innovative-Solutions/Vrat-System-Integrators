@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
   ServiceItem,
   ProductItem,
@@ -34,6 +34,7 @@ import {
   INITIAL_HERO_CONFIGS,
   INITIAL_MEDIA_ITEMS,
 } from "../data/initialData";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 interface CMSContextType {
   settings: GlobalSettings;
@@ -126,6 +127,461 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
   }
 }
 
+// ============================================================================
+// Database Converters (Snake Case DB Columns <-> CamelCase React Types)
+// ============================================================================
+const mapHeroFromDB = (row: any): PageHeroConfig => ({
+  pageId: row.page_id,
+  pageName: row.page_name || row.page_id,
+  heading: row.heading || "",
+  subtitle: row.subtitle || "",
+  backgroundImage: row.background_image || "",
+  primaryCtaText: row.primary_cta_text || "",
+  primaryCtaLink: row.primary_cta_link || "",
+  secondaryCtaText: row.secondary_cta_text || "",
+  secondaryCtaLink: row.secondary_cta_link || "",
+  showSection: row.show_section !== false,
+  status: (row.status as "Published" | "Draft") || "Published",
+});
+
+const mapHeroToDB = (h: PageHeroConfig) => ({
+  page_id: h.pageId,
+  page_name: h.pageName,
+  heading: h.heading,
+  subtitle: h.subtitle,
+  background_image: h.backgroundImage,
+  primary_cta_text: h.primaryCtaText,
+  primary_cta_link: h.primaryCtaLink,
+  secondary_cta_text: h.secondaryCtaText,
+  secondary_cta_link: h.secondaryCtaLink,
+  show_section: h.showSection,
+  status: h.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapSettingsFromDB = (row: any, prev: GlobalSettings): GlobalSettings => ({
+  companyName: row.company_name || prev.companyName,
+  tagline: row.tagline || prev.tagline,
+  websiteUrl: (row.social_links && row.social_links.website) || prev.websiteUrl || "https://vratsystems.com/",
+  primaryEmail: row.primary_email || prev.primaryEmail,
+  secondaryEmail: prev.secondaryEmail || "Nimeshpatel.VSI@gmail.com",
+  salesEmail: row.sales_email || prev.salesEmail,
+  supportEmail: row.support_email || prev.supportEmail,
+  careersEmail: row.careers_email || prev.careersEmail,
+  phone: row.phone || prev.phone,
+  emergencyHotline: row.emergency_hotline || prev.emergencyHotline,
+  whatsappNumber: row.whatsapp_number || prev.whatsappNumber,
+  address: row.address || prev.address,
+  cityStateZip: row.city_state_zip || prev.cityStateZip,
+  headOfficeAddress: prev.headOfficeAddress,
+  branchOfficeAddress: prev.branchOfficeAddress,
+  businessHours: row.business_hours || prev.businessHours,
+  googleMapsUrl: row.google_maps_url || prev.googleMapsUrl,
+  socialLinks: typeof row.social_links === "object" && row.social_links ? { ...prev.socialLinks, ...row.social_links } : prev.socialLinks,
+  maintenanceMode: Boolean(row.maintenance_mode),
+});
+
+const mapSettingsToDB = (s: GlobalSettings) => ({
+  id: "global_config",
+  company_name: s.companyName,
+  tagline: s.tagline,
+  primary_email: s.primaryEmail,
+  sales_email: s.salesEmail,
+  support_email: s.supportEmail,
+  careers_email: s.careersEmail,
+  phone: s.phone,
+  emergency_hotline: s.emergencyHotline,
+  whatsapp_number: s.whatsappNumber,
+  address: s.address,
+  city_state_zip: s.cityStateZip,
+  business_hours: s.businessHours,
+  google_maps_url: s.googleMapsUrl,
+  social_links: { ...s.socialLinks, website: s.websiteUrl || "https://vratsystems.com/" },
+  maintenance_mode: s.maintenanceMode,
+  updated_at: new Date().toISOString(),
+});
+
+const mapServiceFromDB = (row: any): ServiceItem => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  shortDesc: row.short_desc || "",
+  overview: row.overview || "",
+  icon: row.icon || "Camera",
+  image: row.image || "",
+  features: Array.isArray(row.features) ? row.features : [],
+  benefits: Array.isArray(row.benefits) ? row.benefits : [],
+  applications: Array.isArray(row.applications) ? row.applications : [],
+  solutionTypes: Array.isArray(row.solution_types) ? row.solution_types : [],
+  status: row.status || "Published",
+  displayOrder: row.display_order || 0,
+});
+
+const mapServiceToDB = (s: ServiceItem) => ({
+  id: s.id,
+  slug: s.slug,
+  title: s.title,
+  short_desc: s.shortDesc,
+  overview: s.overview,
+  icon: s.icon,
+  image: s.image,
+  features: s.features,
+  benefits: s.benefits,
+  applications: s.applications,
+  solution_types: s.solutionTypes,
+  status: s.status,
+  display_order: s.displayOrder,
+  updated_at: new Date().toISOString(),
+});
+
+const mapProductFromDB = (row: any): ProductItem => ({
+  id: row.id,
+  name: row.name,
+  category: row.category,
+  brand: row.brand,
+  image: row.image || "",
+  tagline: row.tagline || "",
+  features: Array.isArray(row.features) ? row.features : [],
+  applications: Array.isArray(row.applications) ? row.applications : [],
+  specs: typeof row.specs === "object" && row.specs ? row.specs : {},
+  datasheetUrl: row.datasheet_url,
+  isFeatured: Boolean(row.is_featured),
+  status: row.status || "Published",
+});
+
+const mapProductToDB = (p: ProductItem) => ({
+  id: p.id,
+  name: p.name,
+  category: p.category,
+  brand: p.brand,
+  image: p.image,
+  tagline: p.tagline,
+  features: p.features,
+  applications: p.applications,
+  specs: p.specs,
+  datasheet_url: p.datasheetUrl,
+  is_featured: p.isFeatured,
+  status: p.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapSolutionFromDB = (row: any): IndustrySolution => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  subtitle: row.subtitle || "",
+  description: row.description || "",
+  icon: row.icon || "Building2",
+  image: row.image || "",
+  heroImage: row.hero_image,
+  challenges: Array.isArray(row.challenges) ? row.challenges : [],
+  solutionsProvided: Array.isArray(row.solutions_provided) ? row.solutions_provided : [],
+  keyFeatures: Array.isArray(row.key_features) ? row.key_features : [],
+  architectureSteps: Array.isArray(row.architecture_steps) ? row.architecture_steps : [],
+  successMetrics: Array.isArray(row.success_metrics) ? row.success_metrics : [],
+  testimonial: row.testimonial,
+  caseStudyRef: row.case_study_ref,
+  status: row.status || "Published",
+});
+
+const mapSolutionToDB = (s: IndustrySolution) => ({
+  id: s.id,
+  slug: s.slug,
+  title: s.title,
+  subtitle: s.subtitle,
+  description: s.description,
+  icon: s.icon,
+  image: s.image,
+  hero_image: s.heroImage,
+  challenges: s.challenges,
+  solutions_provided: s.solutionsProvided,
+  key_features: s.keyFeatures,
+  architecture_steps: s.architectureSteps,
+  success_metrics: s.successMetrics,
+  testimonial: s.testimonial,
+  case_study_ref: s.caseStudyRef,
+  status: s.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapCaseFromDB = (row: any): CaseStudy => ({
+  id: row.id,
+  title: row.title,
+  clientType: row.client_type,
+  industry: row.industry,
+  location: row.location,
+  year: row.year,
+  projectSize: row.project_size,
+  technologyUsed: Array.isArray(row.technology_used) ? row.technology_used : [],
+  shortDesc: row.short_desc || "",
+  challenge: row.challenge || "",
+  solution: row.solution || "",
+  results: Array.isArray(row.results) ? row.results : [],
+  image: row.image || "",
+  beforeImage: row.before_image,
+  afterImage: row.after_image,
+  testimonial: row.testimonial,
+  status: row.status || "Published",
+});
+
+const mapCaseToDB = (c: CaseStudy) => ({
+  id: c.id,
+  title: c.title,
+  client_type: c.clientType,
+  industry: c.industry,
+  location: c.location,
+  year: c.year,
+  project_size: c.projectSize,
+  technology_used: c.technologyUsed,
+  short_desc: c.shortDesc,
+  challenge: c.challenge,
+  solution: c.solution,
+  results: c.results,
+  image: c.image,
+  before_image: c.beforeImage,
+  after_image: c.afterImage,
+  testimonial: c.testimonial,
+  status: c.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapBlogFromDB = (row: any): BlogPost => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  category: row.category,
+  author: row.author,
+  authorRole: row.author_role || "",
+  authorAvatar: row.author_avatar || "",
+  publishDate: row.publish_date || "",
+  readTime: row.read_time || "5 min read",
+  excerpt: row.excerpt || "",
+  content: row.content || "",
+  featuredImage: row.featured_image || "",
+  tags: Array.isArray(row.tags) ? row.tags : [],
+  relatedServices: Array.isArray(row.related_services) ? row.related_services : [],
+  isFeatured: Boolean(row.is_featured),
+  status: row.status || "Published",
+});
+
+const mapBlogToDB = (b: BlogPost) => ({
+  id: b.id,
+  slug: b.slug,
+  title: b.title,
+  category: b.category,
+  author: b.author,
+  author_role: b.authorRole,
+  author_avatar: b.authorAvatar,
+  publish_date: b.publishDate,
+  read_time: b.readTime,
+  excerpt: b.excerpt,
+  content: b.content,
+  featured_image: b.featuredImage,
+  tags: b.tags,
+  related_services: b.relatedServices,
+  is_featured: b.isFeatured,
+  status: b.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapFaqFromDB = (row: any): FAQItem => ({
+  id: row.id,
+  category: row.category,
+  question: row.question,
+  answer: row.answer,
+  displayOrder: row.display_order || 0,
+  status: row.status || "Published",
+});
+
+const mapFaqToDB = (f: FAQItem) => ({
+  id: f.id,
+  category: f.category,
+  question: f.question,
+  answer: f.answer,
+  display_order: f.displayOrder,
+  status: f.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapDownloadFromDB = (row: any): DownloadItem => ({
+  id: row.id,
+  title: row.title,
+  category: row.category,
+  description: row.description || "",
+  fileType: row.file_type || "PDF",
+  fileSize: row.file_size || "",
+  version: row.version || "v1.0",
+  updatedDate: row.updated_date || "",
+  downloadUrl: row.download_url || "",
+  downloadsCount: row.downloads_count || 0,
+  status: row.status || "Published",
+});
+
+const mapDownloadToDB = (d: DownloadItem) => ({
+  id: d.id,
+  title: d.title,
+  category: d.category,
+  description: d.description,
+  file_type: d.fileType,
+  file_size: d.fileSize,
+  version: d.version,
+  updated_date: d.updatedDate,
+  download_url: d.downloadUrl,
+  downloads_count: d.downloadsCount,
+  status: d.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapJobFromDB = (row: any): JobOpening => ({
+  id: row.id,
+  title: row.title,
+  department: row.department,
+  location: row.location,
+  type: row.type || "Full-Time",
+  experience: row.experience || "",
+  qualification: row.qualification || "",
+  salary: row.salary || "",
+  description: row.description || "",
+  responsibilities: Array.isArray(row.responsibilities) ? row.responsibilities : [],
+  requirements: Array.isArray(row.requirements) ? row.requirements : [],
+  benefits: Array.isArray(row.benefits) ? row.benefits : [],
+  deadline: row.deadline || "Open",
+  status: row.status || "Published",
+});
+
+const mapJobToDB = (j: JobOpening) => ({
+  id: j.id,
+  title: j.title,
+  department: j.department,
+  location: j.location,
+  type: j.type,
+  experience: j.experience,
+  qualification: j.qualification,
+  salary: j.salary,
+  description: j.description,
+  responsibilities: j.responsibilities,
+  requirements: j.requirements,
+  benefits: j.benefits,
+  deadline: j.deadline,
+  status: j.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapLeadFromDB = (row: any): LeadItem => ({
+  id: row.id,
+  type: row.type || "Inquiry",
+  name: row.name,
+  company: row.company,
+  email: row.email,
+  phone: row.phone,
+  city: row.city,
+  serviceOrProduct: row.service_or_product,
+  projectType: row.project_type,
+  estimatedSize: row.estimated_size,
+  message: row.message || "",
+  preferredDate: row.preferred_date,
+  preferredTime: row.preferred_time,
+  preferredContactMethod: row.preferred_contact_method,
+  attachmentName: row.attachment_name,
+  status: row.status || "New",
+  assignedTo: row.assigned_to,
+  notes: row.notes,
+  createdDate: row.created_date || "",
+});
+
+const mapLeadToDB = (l: LeadItem) => ({
+  id: l.id,
+  type: l.type,
+  name: l.name,
+  company: l.company,
+  email: l.email,
+  phone: l.phone,
+  city: l.city,
+  service_or_product: l.serviceOrProduct,
+  project_type: l.projectType,
+  estimated_size: l.estimatedSize,
+  message: l.message,
+  preferred_date: l.preferredDate,
+  preferred_time: l.preferredTime,
+  preferred_contact_method: l.preferredContactMethod,
+  attachment_name: l.attachmentName,
+  status: l.status,
+  assigned_to: l.assignedTo,
+  notes: l.notes,
+  created_date: l.createdDate || new Date().toISOString(),
+});
+
+const mapTestimonialFromDB = (row: any): TestimonialItem => ({
+  id: row.id,
+  name: row.name,
+  designation: row.designation || "",
+  company: row.company || "",
+  industry: row.industry || "",
+  quote: row.quote,
+  rating: row.rating || 5,
+  avatar: row.avatar || "",
+  isFeatured: Boolean(row.is_featured),
+  status: row.status || "Published",
+});
+
+const mapTestimonialToDB = (t: TestimonialItem) => ({
+  id: t.id,
+  name: t.name,
+  designation: t.designation,
+  company: t.company,
+  industry: t.industry,
+  quote: t.quote,
+  rating: t.rating,
+  avatar: t.avatar,
+  is_featured: t.isFeatured,
+  status: t.status,
+  updated_at: new Date().toISOString(),
+});
+
+const mapPartnerFromDB = (row: any): PartnerBrand => ({
+  id: row.id,
+  name: row.name,
+  category: row.category || "",
+  logo: row.logo || "",
+  websiteUrl: row.website_url || "",
+  order: row.display_order || 0,
+  active: row.active !== false,
+});
+
+const mapPartnerToDB = (p: PartnerBrand) => ({
+  id: p.id,
+  name: p.name,
+  category: p.category,
+  logo: p.logo,
+  website_url: p.websiteUrl,
+  display_order: p.order,
+  active: p.active,
+});
+
+const mapMediaFromDB = (row: any): MediaItem => ({
+  id: row.id,
+  filename: row.filename,
+  url: row.url,
+  type: row.type || "image",
+  size: row.size || "",
+  dimensions: row.dimensions || "",
+  altText: row.alt_text || "",
+  category: row.category || "General",
+  uploadedDate: row.uploaded_date || "",
+});
+
+const mapMediaToDB = (m: MediaItem) => ({
+  id: m.id,
+  filename: m.filename,
+  url: m.url,
+  type: m.type,
+  size: m.size,
+  dimensions: m.dimensions,
+  alt_text: m.altText,
+  category: m.category,
+  uploaded_date: m.uploadedDate,
+});
+
 export function CMSProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<GlobalSettings>(() => loadFromStorage("settings", INITIAL_SETTINGS));
   const [services, setServices] = useState<ServiceItem[]>(() => loadFromStorage("services", INITIAL_SERVICES));
@@ -147,7 +603,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     { id: "log-1", user: "Rajesh Sharma", role: "Super Admin", action: "System Initialized", module: "System", details: "All 29 website content modules and CMS tables initialized.", timestamp: "2026-08-24 09:00" }
   ]));
 
-  // Auto-sync state changes to localStorage
+  // Auto-sync state changes to localStorage as reliable cache
   useEffect(() => { localStorage.setItem("vrat_cms_settings", JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem("vrat_cms_services", JSON.stringify(services)); }, [services]);
   useEffect(() => { localStorage.setItem("vrat_cms_products", JSON.stringify(products)); }, [products]);
@@ -166,7 +622,161 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { localStorage.setItem("vrat_cms_seo", JSON.stringify(seoMetadata)); }, [seoMetadata]);
   useEffect(() => { localStorage.setItem("vrat_cms_logs", JSON.stringify(logs)); }, [logs]);
 
-  const addLog = (action: string, module: string, details: string) => {
+  // ============================================================================
+  // Central Cloud Synchronization via Supabase (Cross-Device Live Persistence)
+  // ============================================================================
+  const syncAllFromSupabase = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      // 1. Page Heroes (Hero sections for all 13+ pages)
+      const { data: dbHeroes } = await supabase.from("page_heroes").select("*");
+      if (dbHeroes && dbHeroes.length > 0) {
+        const heroMap: Record<string, PageHeroConfig> = {};
+        dbHeroes.forEach((h: any) => {
+          heroMap[h.page_id] = mapHeroFromDB(h);
+        });
+        setHeroConfigs((prev) => ({ ...prev, ...heroMap }));
+      }
+
+      // 2. Global Settings & Official Info
+      const { data: dbSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+      if (dbSettings) {
+        setSettings((prev) => mapSettingsFromDB(dbSettings, prev));
+      }
+
+      // 3. Services
+      const { data: dbServices } = await supabase.from("services").select("*").order("display_order", { ascending: true });
+      if (dbServices && dbServices.length > 0) {
+        setServices(dbServices.map(mapServiceFromDB));
+      }
+
+      // 4. Products
+      const { data: dbProducts } = await supabase.from("products").select("*");
+      if (dbProducts && dbProducts.length > 0) {
+        setProducts(dbProducts.map(mapProductFromDB));
+      } else {
+        // Auto-seed cloud if empty
+        for (const p of INITIAL_PRODUCTS) {
+          await supabase.from("products").upsert(mapProductToDB(p));
+        }
+      }
+
+      // 5. Industry Solutions
+      const { data: dbSolutions } = await supabase.from("solutions").select("*");
+      if (dbSolutions && dbSolutions.length > 0) {
+        setSolutions(dbSolutions.map(mapSolutionFromDB));
+      } else {
+        for (const sol of INITIAL_SOLUTIONS) {
+          await supabase.from("solutions").upsert(mapSolutionToDB(sol));
+        }
+      }
+
+      // 6. Case Studies / Projects
+      const { data: dbCases } = await supabase.from("case_studies").select("*");
+      if (dbCases && dbCases.length > 0) {
+        setCaseStudies(dbCases.map(mapCaseFromDB));
+      } else {
+        for (const c of INITIAL_CASE_STUDIES) {
+          await supabase.from("case_studies").upsert(mapCaseToDB(c));
+        }
+      }
+
+      // 7. Blog Posts
+      const { data: dbBlogs } = await supabase.from("blogs").select("*");
+      if (dbBlogs && dbBlogs.length > 0) {
+        setBlogs(dbBlogs.map(mapBlogFromDB));
+      } else {
+        for (const b of INITIAL_BLOG_POSTS) {
+          await supabase.from("blogs").upsert(mapBlogToDB(b));
+        }
+      }
+
+      // 8. FAQs
+      const { data: dbFaqs } = await supabase.from("faqs").select("*").order("display_order", { ascending: true });
+      if (dbFaqs && dbFaqs.length > 0) {
+        setFaqs(dbFaqs.map(mapFaqFromDB));
+      } else {
+        for (const f of INITIAL_FAQS) {
+          await supabase.from("faqs").upsert(mapFaqToDB(f));
+        }
+      }
+
+      // 9. Downloads
+      const { data: dbDownloads } = await supabase.from("downloads").select("*");
+      if (dbDownloads && dbDownloads.length > 0) {
+        setDownloads(dbDownloads.map(mapDownloadFromDB));
+      } else {
+        for (const d of INITIAL_DOWNLOADS) {
+          await supabase.from("downloads").upsert(mapDownloadToDB(d));
+        }
+      }
+
+      // 10. Careers & Jobs
+      const { data: dbJobs } = await supabase.from("job_openings").select("*");
+      if (dbJobs && dbJobs.length > 0) {
+        setJobs(dbJobs.map(mapJobFromDB));
+      } else {
+        for (const j of INITIAL_JOBS) {
+          await supabase.from("job_openings").upsert(mapJobToDB(j));
+        }
+      }
+
+      // 11. Leads & Inquiries
+      const { data: dbLeads } = await supabase.from("leads").select("*").order("created_date", { ascending: false });
+      if (dbLeads && dbLeads.length > 0) {
+        setLeads(dbLeads.map(mapLeadFromDB));
+      }
+
+      // 12. Testimonials
+      const { data: dbTestimonials } = await supabase.from("testimonials").select("*");
+      if (dbTestimonials && dbTestimonials.length > 0) {
+        setTestimonials(dbTestimonials.map(mapTestimonialFromDB));
+      } else {
+        for (const t of INITIAL_TESTIMONIALS) {
+          await supabase.from("testimonials").upsert(mapTestimonialToDB(t));
+        }
+      }
+
+      // 13. Technology Partners
+      const { data: dbPartners } = await supabase.from("partners").select("*").order("display_order", { ascending: true });
+      if (dbPartners && dbPartners.length > 0) {
+        setPartners(dbPartners.map(mapPartnerFromDB));
+      }
+
+      // 14. Media Library
+      const { data: dbMedia } = await supabase.from("media_items").select("*");
+      if (dbMedia && dbMedia.length > 0) {
+        setMediaItems(dbMedia.map(mapMediaFromDB));
+      } else {
+        for (const m of INITIAL_MEDIA_ITEMS) {
+          await supabase.from("media_items").upsert(mapMediaToDB(m));
+        }
+      }
+    } catch (err) {
+      console.warn("Supabase initial sync error:", err);
+    }
+  }, []);
+
+  // Initial cloud fetch + Realtime subscription across all devices
+  useEffect(() => {
+    syncAllFromSupabase();
+
+    if (isSupabaseConfigured) {
+      const channel = supabase
+        .channel("vrat_cms_live_sync")
+        .on("postgres_changes", { event: "*", schema: "public" }, () => {
+          syncAllFromSupabase();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [syncAllFromSupabase]);
+
+  // Activity logger
+  const addLog = async (action: string, module: string, details: string) => {
     const newLog: ActivityLog = {
       id: "log-" + Date.now(),
       user: "Admin",
@@ -177,138 +787,393 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       timestamp: new Date().toLocaleString(),
     };
     setLogs((prev) => [newLog, ...prev.slice(0, 49)]);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("activity_logs").insert({
+          id: newLog.id,
+          user_name: newLog.user,
+          role: newLog.role,
+          action: newLog.action,
+          module: newLog.module,
+          details: newLog.details,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (e) {
+        // silent fallback
+      }
+    }
   };
 
-  const updateSettings = (newSettings: Partial<GlobalSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-    addLog("Updated Settings", "Settings", "Global company info or social links updated");
+  // 1. Settings
+  const updateSettings = async (newSettings: Partial<GlobalSettings>) => {
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
+    addLog("Updated Settings", "Settings", "Global company info or official website URL updated");
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("settings").upsert(mapSettingsToDB(updated));
+      } catch (e) {
+        console.warn("Supabase settings save:", e);
+      }
+    }
   };
 
-  // Service CRUD
-  const addService = (s: Omit<ServiceItem, "id">) => {
+  // 2. Services CRUD
+  const addService = async (s: Omit<ServiceItem, "id">) => {
     const newItem: ServiceItem = { ...s, id: "srv-" + Date.now() };
     setServices((prev) => [...prev, newItem]);
     addLog("Added Service", "Services", `Created service "${s.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("services").insert(mapServiceToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateService = (id: string, s: Partial<ServiceItem>) => {
-    setServices((prev) => prev.map((item) => (item.id === id ? { ...item, ...s } : item)));
+  const updateService = async (id: string, s: Partial<ServiceItem>) => {
+    let fullItem: ServiceItem | undefined;
+    setServices((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...s };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Service", "Services", `Updated service ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("services").upsert(mapServiceToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteService = (id: string) => {
+  const deleteService = async (id: string) => {
     setServices((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Service", "Services", `Deleted service ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("services").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Product CRUD
-  const addProduct = (p: Omit<ProductItem, "id">) => {
+  // 3. Products CRUD
+  const addProduct = async (p: Omit<ProductItem, "id">) => {
     const newItem: ProductItem = { ...p, id: "prod-" + Date.now() };
     setProducts((prev) => [newItem, ...prev]);
     addLog("Added Product", "Products", `Added product "${p.name}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("products").insert(mapProductToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateProduct = (id: string, p: Partial<ProductItem>) => {
-    setProducts((prev) => prev.map((item) => (item.id === id ? { ...item, ...p } : item)));
+  const updateProduct = async (id: string, p: Partial<ProductItem>) => {
+    let fullItem: ProductItem | undefined;
+    setProducts((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...p };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Product", "Products", `Updated product ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("products").upsert(mapProductToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteProduct = (id: string) => {
+  const deleteProduct = async (id: string) => {
     setProducts((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Product", "Products", `Deleted product ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("products").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Solutions CRUD
-  const addSolution = (sol: Omit<IndustrySolution, "id">) => {
+  // 4. Solutions CRUD
+  const addSolution = async (sol: Omit<IndustrySolution, "id">) => {
     const newItem: IndustrySolution = { ...sol, id: "sol-" + Date.now() };
     setSolutions((prev) => [...prev, newItem]);
     addLog("Added Industry Solution", "Solutions", `Added solution "${sol.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("solutions").insert(mapSolutionToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateSolution = (id: string, sol: Partial<IndustrySolution>) => {
-    setSolutions((prev) => prev.map((item) => (item.id === id ? { ...item, ...sol } : item)));
+  const updateSolution = async (id: string, sol: Partial<IndustrySolution>) => {
+    let fullItem: IndustrySolution | undefined;
+    setSolutions((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...sol };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Industry Solution", "Solutions", `Updated solution ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("solutions").upsert(mapSolutionToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteSolution = (id: string) => {
+  const deleteSolution = async (id: string) => {
     setSolutions((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Industry Solution", "Solutions", `Deleted solution ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("solutions").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Case Studies CRUD
-  const addCaseStudy = (c: Omit<CaseStudy, "id">) => {
+  // 5. Case Studies CRUD
+  const addCaseStudy = async (c: Omit<CaseStudy, "id">) => {
     const newItem: CaseStudy = { ...c, id: "case-" + Date.now() };
     setCaseStudies((prev) => [newItem, ...prev]);
     addLog("Added Case Study", "Projects", `Added case study "${c.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("case_studies").insert(mapCaseToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateCaseStudy = (id: string, c: Partial<CaseStudy>) => {
-    setCaseStudies((prev) => prev.map((item) => (item.id === id ? { ...item, ...c } : item)));
+  const updateCaseStudy = async (id: string, c: Partial<CaseStudy>) => {
+    let fullItem: CaseStudy | undefined;
+    setCaseStudies((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...c };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Case Study", "Projects", `Updated case study ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("case_studies").upsert(mapCaseToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteCaseStudy = (id: string) => {
+  const deleteCaseStudy = async (id: string) => {
     setCaseStudies((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Case Study", "Projects", `Deleted case study ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("case_studies").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Blog CRUD
-  const addBlog = (b: Omit<BlogPost, "id">) => {
+  // 6. Blog Posts CRUD
+  const addBlog = async (b: Omit<BlogPost, "id">) => {
     const newItem: BlogPost = { ...b, id: "blog-" + Date.now() };
     setBlogs((prev) => [newItem, ...prev]);
     addLog("Added Blog Post", "Blog", `Published blog "${b.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("blogs").insert(mapBlogToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateBlog = (id: string, b: Partial<BlogPost>) => {
-    setBlogs((prev) => prev.map((item) => (item.id === id ? { ...item, ...b } : item)));
+  const updateBlog = async (id: string, b: Partial<BlogPost>) => {
+    let fullItem: BlogPost | undefined;
+    setBlogs((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...b };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Blog Post", "Blog", `Updated blog post ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("blogs").upsert(mapBlogToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteBlog = (id: string) => {
+  const deleteBlog = async (id: string) => {
     setBlogs((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Blog Post", "Blog", `Deleted blog post ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("blogs").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // FAQ CRUD
-  const addFAQ = (f: Omit<FAQItem, "id">) => {
+  // 7. FAQs CRUD
+  const addFAQ = async (f: Omit<FAQItem, "id">) => {
     const newItem: FAQItem = { ...f, id: "faq-" + Date.now() };
     setFaqs((prev) => [...prev, newItem]);
     addLog("Added FAQ", "FAQs", `Added FAQ: "${f.question.slice(0, 30)}..."`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("faqs").insert(mapFaqToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateFAQ = (id: string, f: Partial<FAQItem>) => {
-    setFaqs((prev) => prev.map((item) => (item.id === id ? { ...item, ...f } : item)));
+  const updateFAQ = async (id: string, f: Partial<FAQItem>) => {
+    let fullItem: FAQItem | undefined;
+    setFaqs((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...f };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated FAQ", "FAQs", `Updated FAQ ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("faqs").upsert(mapFaqToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteFAQ = (id: string) => {
+  const deleteFAQ = async (id: string) => {
     setFaqs((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted FAQ", "FAQs", `Deleted FAQ ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("faqs").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Downloads CRUD
-  const addDownload = (d: Omit<DownloadItem, "id">) => {
+  // 8. Downloads CRUD
+  const addDownload = async (d: Omit<DownloadItem, "id">) => {
     const newItem: DownloadItem = { ...d, id: "dl-" + Date.now() };
     setDownloads((prev) => [newItem, ...prev]);
     addLog("Added Download Document", "Downloads", `Uploaded file "${d.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("downloads").insert(mapDownloadToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateDownload = (id: string, d: Partial<DownloadItem>) => {
-    setDownloads((prev) => prev.map((item) => (item.id === id ? { ...item, ...d } : item)));
+  const updateDownload = async (id: string, d: Partial<DownloadItem>) => {
+    let fullItem: DownloadItem | undefined;
+    setDownloads((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...d };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Download Document", "Downloads", `Updated download ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("downloads").upsert(mapDownloadToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteDownload = (id: string) => {
+  const deleteDownload = async (id: string) => {
     setDownloads((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Download Document", "Downloads", `Deleted download ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("downloads").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
-  const incrementDownloadCount = (id: string) => {
+  const incrementDownloadCount = async (id: string) => {
+    let count = 0;
     setDownloads((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, downloadsCount: (item.downloadsCount || 0) + 1 } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          count = (item.downloadsCount || 0) + 1;
+          return { ...item, downloadsCount: count };
+        }
+        return item;
+      })
     );
+
+    if (isSupabaseConfigured && count > 0) {
+      try {
+        await supabase.from("downloads").update({ downloads_count: count }).eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Careers CRUD
-  const addJob = (j: Omit<JobOpening, "id">) => {
+  // 9. Careers / Jobs CRUD
+  const addJob = async (j: Omit<JobOpening, "id">) => {
     const newItem: JobOpening = { ...j, id: "job-" + Date.now() };
     setJobs((prev) => [newItem, ...prev]);
     addLog("Created Job Opening", "Careers", `Posted job "${j.title}"`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("job_openings").insert(mapJobToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateJob = (id: string, j: Partial<JobOpening>) => {
-    setJobs((prev) => prev.map((item) => (item.id === id ? { ...item, ...j } : item)));
+  const updateJob = async (id: string, j: Partial<JobOpening>) => {
+    let fullItem: JobOpening | undefined;
+    setJobs((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...j };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Job Opening", "Careers", `Updated job ID: ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("job_openings").upsert(mapJobToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteJob = (id: string) => {
+  const deleteJob = async (id: string) => {
     setJobs((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Job Opening", "Careers", `Deleted job ID: ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("job_openings").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
-  const submitApplication = (app: Omit<JobApplication, "id" | "appliedDate" | "status">) => {
+  const submitApplication = async (app: Omit<JobApplication, "id" | "appliedDate" | "status">) => {
     const newApp: JobApplication = {
       ...app,
       id: "app-" + Date.now(),
@@ -317,16 +1182,48 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     };
     setApplications((prev) => [newApp, ...prev]);
     addLog("New Job Application", "Careers", `Candidate ${app.fullName} applied for ${app.jobTitle}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("job_applications").insert({
+          id: newApp.id,
+          job_id: newApp.jobId,
+          job_title: newApp.jobTitle,
+          full_name: newApp.fullName,
+          email: newApp.email,
+          phone: newApp.phone,
+          current_city: newApp.currentCity,
+          experience: newApp.experience,
+          current_company: newApp.currentCompany,
+          current_ctc: newApp.currentCtc,
+          expected_ctc: newApp.expectedCtc,
+          notice_period: newApp.noticePeriod,
+          highest_qualification: newApp.highestQualification,
+          resume_file_name: newApp.resumeFileName,
+          cover_letter: newApp.coverLetter,
+          linkedin_profile: newApp.linkedinProfile,
+          status: newApp.status,
+          notes: newApp.notes,
+          applied_date: new Date().toISOString(),
+        });
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateApplicationStatus = (id: string, status: JobApplication["status"], notes?: string) => {
+  const updateApplicationStatus = async (id: string, status: JobApplication["status"], notes?: string) => {
     setApplications((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status, notes: notes || item.notes } : item))
     );
     addLog("Application Status Changed", "Careers", `Application ${id} marked as ${status}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("job_applications").update({ status, notes }).eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Leads CRM
-  const submitLead = (lead: Omit<LeadItem, "id" | "createdDate" | "status">) => {
+  // 10. Inbound Leads CRM
+  const submitLead = async (lead: Omit<LeadItem, "id" | "createdDate" | "status">) => {
     const newLead: LeadItem = {
       ...lead,
       id: "lead-" + Date.now(),
@@ -335,59 +1232,134 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     };
     setLeads((prev) => [newLead, ...prev]);
     addLog("New Inbound Lead", "Leads", `${lead.type} from ${lead.name} (${lead.company || "Individual"})`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("leads").insert(mapLeadToDB(newLead));
+      } catch (e) { console.warn("Supabase submit lead:", e); }
+    }
   };
-  const updateLeadStatus = (id: string, status: LeadItem["status"], notes?: string, assignedTo?: string) => {
+  const updateLeadStatus = async (id: string, status: LeadItem["status"], notes?: string, assignedTo?: string) => {
+    let fullItem: LeadItem | undefined;
     setLeads((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status,
-              notes: notes !== undefined ? notes : item.notes,
-              assignedTo: assignedTo !== undefined ? assignedTo : item.assignedTo,
-            }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = {
+            ...item,
+            status,
+            notes: notes !== undefined ? notes : item.notes,
+            assignedTo: assignedTo !== undefined ? assignedTo : item.assignedTo,
+          };
+          return fullItem;
+        }
+        return item;
+      })
     );
     addLog("Lead Status Updated", "Leads", `Lead ${id} updated to ${status}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("leads").upsert(mapLeadToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteLead = (id: string) => {
+  const deleteLead = async (id: string) => {
     setLeads((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Lead", "Leads", `Deleted lead record ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("leads").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Testimonials CRUD
-  const addTestimonial = (t: Omit<TestimonialItem, "id">) => {
+  // 11. Testimonials CRUD
+  const addTestimonial = async (t: Omit<TestimonialItem, "id">) => {
     const newItem: TestimonialItem = { ...t, id: "t-" + Date.now() };
     setTestimonials((prev) => [newItem, ...prev]);
     addLog("Added Testimonial", "Testimonials", `Added testimonial from ${t.name}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("testimonials").insert(mapTestimonialToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateTestimonial = (id: string, t: Partial<TestimonialItem>) => {
-    setTestimonials((prev) => prev.map((item) => (item.id === id ? { ...item, ...t } : item)));
+  const updateTestimonial = async (id: string, t: Partial<TestimonialItem>) => {
+    let fullItem: TestimonialItem | undefined;
+    setTestimonials((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...t };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Testimonial", "Testimonials", `Updated testimonial ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("testimonials").upsert(mapTestimonialToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteTestimonial = (id: string) => {
+  const deleteTestimonial = async (id: string) => {
     setTestimonials((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Testimonial", "Testimonials", `Deleted testimonial ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("testimonials").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Partners CRUD
-  const addPartner = (p: Omit<PartnerBrand, "id">) => {
+  // 12. Partner Brands CRUD
+  const addPartner = async (p: Omit<PartnerBrand, "id">) => {
     const newItem: PartnerBrand = { ...p, id: "p-" + Date.now() };
     setPartners((prev) => [...prev, newItem]);
     addLog("Added Partner Brand", "Partners", `Added partner ${p.name}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("partners").insert(mapPartnerToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updatePartner = (id: string, p: Partial<PartnerBrand>) => {
-    setPartners((prev) => prev.map((item) => (item.id === id ? { ...item, ...p } : item)));
+  const updatePartner = async (id: string, p: Partial<PartnerBrand>) => {
+    let fullItem: PartnerBrand | undefined;
+    setPartners((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          fullItem = { ...item, ...p };
+          return fullItem;
+        }
+        return item;
+      })
+    );
     addLog("Updated Partner Brand", "Partners", `Updated partner ${id}`);
+
+    if (isSupabaseConfigured && fullItem) {
+      try {
+        await supabase.from("partners").upsert(mapPartnerToDB(fullItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deletePartner = (id: string) => {
+  const deletePartner = async (id: string) => {
     setPartners((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Partner Brand", "Partners", `Deleted partner ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("partners").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Media CRUD
-  const addMediaItem = (m: Omit<MediaItem, "id" | "uploadedDate">) => {
+  // 13. Media Library CRUD
+  const addMediaItem = async (m: Omit<MediaItem, "id" | "uploadedDate">) => {
     const newItem: MediaItem = {
       ...m,
       id: "media-" + Date.now(),
@@ -395,26 +1367,67 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     };
     setMediaItems((prev) => [newItem, ...prev]);
     addLog("Uploaded Media", "Media", `Added media file ${m.filename}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("media_items").insert(mapMediaToDB(newItem));
+      } catch (e) { console.warn(e); }
+    }
   };
-  const deleteMediaItem = (id: string) => {
+  const deleteMediaItem = async (id: string) => {
     setMediaItems((prev) => prev.filter((item) => item.id !== id));
     addLog("Deleted Media", "Media", `Removed media item ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("media_items").delete().eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
-  const updateMediaAltText = (id: string, altText: string) => {
+  const updateMediaAltText = async (id: string, altText: string) => {
     setMediaItems((prev) => prev.map((item) => (item.id === id ? { ...item, altText } : item)));
     addLog("Updated Media Alt Text", "Media", `Updated SEO alt text for ${id}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("media_items").update({ alt_text: altText }).eq("id", id);
+      } catch (e) { console.warn(e); }
+    }
   };
 
-  // Page Hero Builder
-  const updateHeroConfig = (pageId: string, config: Partial<PageHeroConfig>) => {
+  // 14. Dynamic Page Hero Builder (Crucial for Page & Section Manager cross-device persistence)
+  const updateHeroConfig = async (pageId: string, config: Partial<PageHeroConfig>) => {
+    const current = heroConfigs[pageId] || INITIAL_HERO_CONFIGS[pageId] || {
+      pageId,
+      pageName: pageId,
+      heading: "",
+      subtitle: "",
+      backgroundImage: "",
+      primaryCtaText: "",
+      primaryCtaLink: "",
+      secondaryCtaText: "",
+      secondaryCtaLink: "",
+      showSection: true,
+      status: "Published",
+    };
+    const updated: PageHeroConfig = { ...current, ...config };
+
     setHeroConfigs((prev) => ({
       ...prev,
-      [pageId]: { ...prev[pageId], ...config },
+      [pageId]: updated,
     }));
     addLog("Updated Page Hero", "Page Builder", `Modified Hero Section on page: ${pageId}`);
+
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.from("page_heroes").upsert(mapHeroToDB(updated));
+      } catch (err) {
+        console.warn("Supabase hero save error:", err);
+      }
+    }
   };
 
-  // SEO
+  // 15. SEO Metadata
   const updateSEOMetadata = (pageId: string, seo: Partial<SEOMetadata>) => {
     setSeoMetadata((prev) => ({
       ...prev,
@@ -423,7 +1436,8 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     addLog("Updated SEO Metadata", "SEO", `Modified SEO settings for: ${pageId}`);
   };
 
-  const resetToDefaults = () => {
+  // Reset demo / storage
+  const resetToDefaults = async () => {
     localStorage.clear();
     setSettings(INITIAL_SETTINGS);
     setServices(INITIAL_SERVICES);
@@ -442,6 +1456,18 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     setHeroConfigs(INITIAL_HERO_CONFIGS);
     setSeoMetadata({});
     addLog("System Reset", "System", "Restored all database tables to factory defaults.");
+
+    // Resync cloud if needed
+    if (isSupabaseConfigured) {
+      try {
+        for (const [pId, h] of Object.entries(INITIAL_HERO_CONFIGS)) {
+          await supabase.from("page_heroes").upsert(mapHeroToDB(h));
+        }
+        await supabase.from("settings").upsert(mapSettingsToDB(INITIAL_SETTINGS));
+      } catch (e) {
+        console.warn(e);
+      }
+    }
   };
 
   return (

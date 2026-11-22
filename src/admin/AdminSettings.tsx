@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useCMS } from "../context/CMSContext";
+import { useToast } from "../context/ToastContext";
 import { checkSupabaseConnection, isSupabaseConfigured } from "../lib/supabase";
 import {
   Settings,
@@ -19,8 +20,10 @@ import {
 
 export default function AdminSettings() {
   const { settings, updateSettings, addLog, resetToDefaults } = useCMS();
+  const toast = useToast();
   const [formData, setFormData] = useState(settings);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Supabase connection state
   const [dbStatus, setDbStatus] = useState<{ loading: boolean; connected: boolean; message: string }>({
@@ -39,11 +42,19 @@ export default function AdminSettings() {
     testConnection();
   }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    setIsSaving(true);
+    try {
+      await updateSettings(formData);
+      setSaveSuccess(true);
+      toast.success("Settings Saved!", "Global configurations and company info synced to cloud.");
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      toast.error("Save Failed", err?.message || "Failed to update global settings.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -132,6 +143,16 @@ export default function AdminSettings() {
                 value={formData.tagline}
                 onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-slate-300 font-semibold mb-1">Official Website URL</label>
+              <input
+                type="url"
+                value={formData.websiteUrl || "https://vratsystems.com/"}
+                onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500 font-mono text-xs"
+                placeholder="https://vratsystems.com/"
               />
             </div>
           </div>

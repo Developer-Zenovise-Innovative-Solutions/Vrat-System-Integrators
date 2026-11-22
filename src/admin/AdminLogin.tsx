@@ -2,26 +2,21 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logoIcon from "../assets/logo/logo-icon.png";
 import { useAuth } from "../context/AuthContext";
-import { UserRole } from "../types";
 import {
-  Shield,
   Lock,
   Mail,
   ArrowRight,
   Eye,
   EyeOff,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  KeyRound
+  AlertCircle
 } from "lucide-react";
 
 export default function AdminLogin() {
-  const { login, demoLogin, adminUsers } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@vratsystem.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,21 +31,10 @@ export default function AdminLogin() {
       if (ok) {
         navigate("/admin");
       } else {
-        setError("Invalid credentials. Please verify your email & password or use the default credentials below.");
+        setError("Invalid email address or password. Please verify your credentials and try again.");
         setLoading(false);
       }
     }, 350);
-  };
-
-  const handleQuickRole = (role: UserRole) => {
-    demoLogin(role);
-    navigate("/admin");
-  };
-
-  const handleFillCredentials = (fillEmail: string, fillPass: string) => {
-    setEmail(fillEmail);
-    setPassword(fillPass);
-    setError("");
   };
 
   return (
@@ -86,28 +70,6 @@ export default function AdminLogin() {
             </p>
           </div>
 
-          {/* Quick Default Credentials Card */}
-          <div className="bg-gradient-to-r from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-2xl p-3.5 flex items-center justify-between text-xs">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-blue-400 font-bold uppercase tracking-wider text-[10px]">
-                <KeyRound className="w-3.5 h-3.5" /> Default Admin Login
-              </div>
-              <div className="font-mono text-slate-200 text-[11px]">
-                <span className="text-slate-400">Email:</span> <span className="font-semibold text-white">admin@vratsystem.com</span>
-              </div>
-              <div className="font-mono text-slate-200 text-[11px]">
-                <span className="text-slate-400">Pass:</span> <span className="font-semibold text-emerald-400">admin123</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleFillCredentials("admin@vratsystem.com", "admin123")}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-600/30"
-            >
-              Auto Fill
-            </button>
-          </div>
-
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -140,7 +102,7 @@ export default function AdminLogin() {
                 </label>
                 <span
                   className="text-[11px] text-blue-400 hover:underline cursor-pointer"
-                  onClick={() => alert("Default password is: admin123\nOr check users in Admin Panel > Users & Roles.")}
+                  onClick={() => alert("Please contact the primary system administrator (nimesh.patel@vratsystem.co.in) to reset your administrative credentials.")}
                 >
                   Forgot Password?
                 </span>
@@ -174,40 +136,6 @@ export default function AdminLogin() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Quick Demo Access Roles */}
-          <div className="pt-4 border-t border-slate-800 space-y-3">
-            <div className="flex items-center justify-between text-[11px] text-slate-400">
-              <span className="font-semibold uppercase tracking-wider">Or 1-Click Role Access:</span>
-              <span className="text-blue-400 font-medium">Instant Preview</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickRole("Super Admin")}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition flex items-center justify-between"
-              >
-                <div>
-                  <div className="font-bold text-xs text-white">Super Admin</div>
-                  <div className="text-[10px] text-slate-400">All Modules</div>
-                </div>
-                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickRole("Content Manager")}
-                className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition flex items-center justify-between"
-              >
-                <div>
-                  <div className="font-bold text-xs text-white">Content Lead</div>
-                  <div className="text-[10px] text-slate-400">Pages & CMS</div>
-                </div>
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Back to Live Website */}

@@ -264,6 +264,7 @@ export interface SEOMetadata {
 export interface GlobalSettings {
   companyName: string;
   tagline: string;
+  websiteUrl?: string;
   primaryEmail: string;
   secondaryEmail?: string;
   salesEmail: string;

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
+import { useToast } from "../context/ToastContext";
 import { SEOMetadata } from "../types";
 import {
   Search,
@@ -13,15 +14,17 @@ import {
 
 export default function AdminSEO() {
   const { seoMetadata, updateSEOMetadata, addLog } = useCMS();
+  const toast = useToast();
   const [selectedPage, setSelectedPage] = useState("home");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const defaultSEO: SEOMetadata = {
     pageId: selectedPage,
     pagePath: selectedPage === "home" ? "/" : `/${selectedPage}`,
     metaTitle: "VRAT System Integrators | Electronic Security & Automation Solutions",
     metaDescription: "VRAT System Integrators provides CCTV surveillance, fire alarm systems, access control, networking, home automation, and integrated electronic security solutions across India.",
-    canonicalUrl: `https://vratsystem.com${selectedPage === "home" ? "" : `/${selectedPage}`}`,
+    canonicalUrl: `https://vratsystems.com${selectedPage === "home" ? "" : `/${selectedPage}`}`,
     ogImage: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=1200&h=630&fit=crop&auto=format",
     keywords: ["CCTV", "Security System", "Fire Alarm", "Access Control", "Networking", "System Integrators"],
     indexPage: true,
@@ -52,17 +55,25 @@ export default function AdminSEO() {
         ...defaultSEO,
         pageId: id,
         pagePath: id === "home" ? "/" : `/${id}`,
-        canonicalUrl: `https://vratsystem.com${id === "home" ? "" : `/${id}`}`,
+        canonicalUrl: `https://vratsystems.com${id === "home" ? "" : `/${id}`}`,
       }
     );
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSEOMetadata(selectedPage, formData);
-    addLog("Updated SEO", "SEO", `Saved meta tags and OpenGraph configuration for page: ${selectedPage}`);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    setIsSaving(true);
+    try {
+      updateSEOMetadata(selectedPage, formData);
+      addLog("Updated SEO", "SEO", `Saved meta tags and OpenGraph configuration for page: ${selectedPage}`);
+      setSaveSuccess(true);
+      toast.success("SEO Metadata Saved!", `SEO tags for "${selectedPage}" updated successfully.`);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err: any) {
+      toast.error("Save Failed", err?.message || "Could not save SEO metadata.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

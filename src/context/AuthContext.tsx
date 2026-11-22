@@ -87,13 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Current logged in user session (null by default for protected route enforcement)
   const [user, setUser] = useState<AdminUser | null>(() => {
-    const saved = localStorage.getItem("vrat_admin_session");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
+    try {
+      // Purge legacy auto-login session so entering /admin cold does not bypass login
+      localStorage.removeItem("vrat_admin_session");
+      const active = sessionStorage.getItem("vrat_admin_active_session");
+      if (active) {
+        return JSON.parse(active);
       }
+    } catch (e) {
+      // fallback
     }
     return null;
   });
@@ -103,11 +105,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [adminUsers]);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("vrat_admin_session", JSON.stringify(user));
-    } else {
+    try {
       localStorage.removeItem("vrat_admin_session");
-    }
+      if (user) {
+        sessionStorage.setItem("vrat_admin_active_session", JSON.stringify(user));
+      } else {
+        sessionStorage.removeItem("vrat_admin_active_session");
+      }
+    } catch (e) {}
   }, [user]);
 
   const addAdminUser = (newUser: AdminUser) => {
@@ -190,6 +195,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    try {
+      sessionStorage.removeItem("vrat_admin_active_session");
+      localStorage.removeItem("vrat_admin_session");
+    } catch (e) {}
     setUser(null);
   };
 

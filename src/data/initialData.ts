@@ -20,6 +20,7 @@ import {
 export const INITIAL_SETTINGS: GlobalSettings = {
   companyName: "VRAT SYSTEM",
   tagline: "Building Smarter, Safer & More Secure Environments",
+  websiteUrl: "https://vratsystems.com/",
   primaryEmail: "Nimesh.patel@vratsystem.co.in",
   secondaryEmail: "Nimeshpatel.VSI@gmail.com",
   salesEmail: "Sales@vratsystem.co.in",
