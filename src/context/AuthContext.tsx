@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { AdminUser, UserRole } from "../types";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 interface AuthContextType {
   user: AdminUser | null;
@@ -12,59 +13,23 @@ interface AuthContextType {
   addAdminUser: (newUser: AdminUser) => void;
   updateAdminUser: (id: string, updated: Partial<AdminUser>) => void;
   deleteAdminUser: (id: string) => void;
+  changePassword: (oldPass: string, newPass: string) => { success: boolean; message: string };
+  updateAvatar: (avatarUrl: string) => void;
   hasPermission: (module: string) => boolean;
   switchRole: (role: UserRole) => void;
 }
 
-const INITIAL_ADMIN_USERS: AdminUser[] = [
+// Single initial Super Admin (Requirement 1 & 8A)
+// No default profile photo - clean initials avatar fallback
+export const INITIAL_ADMIN_USERS: AdminUser[] = [
   {
-    id: "usr-1",
-    name: "Rajesh Sharma",
-    email: "admin@vratsystem.com",
-    password: "admin123",
-    role: "Super Admin",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
-    lastLogin: "Today, 09:30 AM",
-    active: true,
-  },
-  {
-    id: "usr-2",
+    id: "usr-superadmin",
     name: "Nimesh Patel",
-    email: "Nimesh.patel@vratsystem.co.in",
+    email: "nimesh.patel@vratsystem.co.in",
     password: "admin123",
     role: "Super Admin",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&auto=format",
-    lastLogin: "Today, 10:00 AM",
-    active: true,
-  },
-  {
-    id: "usr-3",
-    name: "Pooja Verma",
-    email: "pooja.content@vratsystem.com",
-    password: "admin123",
-    role: "Content Manager",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&auto=format",
-    lastLogin: "Yesterday, 04:15 PM",
-    active: true,
-  },
-  {
-    id: "usr-4",
-    name: "Vikram Malhotra",
-    email: "Sales@vratsystem.co.in",
-    password: "admin123",
-    role: "Sales Manager",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&auto=format",
-    lastLogin: "Aug 22, 11:20 AM",
-    active: true,
-  },
-  {
-    id: "usr-5",
-    name: "Suresh Nair",
-    email: "Service@vratsystem.co.in",
-    password: "admin123",
-    role: "Support Manager",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&auto=format",
-    lastLogin: "Aug 21, 02:40 PM",
+    avatar: "", // Removed default stock photo
+    lastLogin: "Active Now",
     active: true,
   },
 ];
@@ -72,35 +37,88 @@ const INITIAL_ADMIN_USERS: AdminUser[] = [
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Registered admin users in local storage
+  // Registered admin users
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => {
-    const saved = localStorage.getItem("vrat_admin_users");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return INITIAL_ADMIN_USERS;
+    try {
+      const saved = localStorage.getItem("vrat_admin_users");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Clean out legacy demo users if present
+          const filtered = parsed.filter(
+            (u: AdminUser) => !["usr-1", "usr-3", "usr-4", "usr-5"].includes(u.id) && u.name !== "Rajesh Sharma"
+          );
+          if (filtered.length > 0) return filtered;
+        }
       }
-    }
+    } catch (e) {}
     return INITIAL_ADMIN_USERS;
   });
 
   // Current logged in user session (null by default for protected route enforcement)
   const [user, setUser] = useState<AdminUser | null>(() => {
     try {
-      // Purge legacy auto-login session so entering /admin cold does not bypass login
       localStorage.removeItem("vrat_admin_session");
       const active = sessionStorage.getItem("vrat_admin_active_session");
       if (active) {
         return JSON.parse(active);
       }
-    } catch (e) {
-      // fallback
-    }
+    } catch (e) {}
     return null;
   });
 
+  const isInitialLoad = useRef(true);
+
+  // Sync admin users with Supabase settings.social_links.admin_users (Requirement 8C: Permanent Deletion Persistence)
   useEffect(() => {
+    async function loadCloudUsers() {
+      if (!isSupabaseConfigured) return;
+      try {
+        const { data, error } = await supabase.from("settings").select("social_links").limit(1);
+        if (!error && data?.[0]?.social_links?.admin_users) {
+          const cloudUsers: AdminUser[] = data[0].social_links.admin_users;
+          if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+            setAdminUsers(cloudUsers);
+            localStorage.setItem("vrat_admin_users", JSON.stringify(cloudUsers));
+          }
+        }
+      } catch (e) {
+        console.warn("Could not sync cloud admin users:", e);
+      }
+    }
+    loadCloudUsers();
+  }, []);
+
+  // Save changes to localStorage and Supabase
+  const persistUsers = async (newUsers: AdminUser[]) => {
+    setAdminUsers(newUsers);
+    localStorage.setItem("vrat_admin_users", JSON.stringify(newUsers));
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data } = await supabase.from("settings").select("social_links").limit(1);
+        const existingLinks = data?.[0]?.social_links || {};
+        await supabase
+          .from("settings")
+          .update({
+            social_links: {
+              ...existingLinks,
+              admin_users: newUsers,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", "settings-primary");
+      } catch (err) {
+        console.warn("Supabase user persistence failed:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
     localStorage.setItem("vrat_admin_users", JSON.stringify(adminUsers));
   }, [adminUsers]);
 
@@ -116,45 +134,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const addAdminUser = (newUser: AdminUser) => {
-    setAdminUsers((prev) => [...prev, newUser]);
+    const updated = [...adminUsers, newUser];
+    persistUsers(updated);
   };
 
   const updateAdminUser = (id: string, updated: Partial<AdminUser>) => {
-    setAdminUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, ...updated } : u))
-    );
-    // If updating current user's profile
+    const newUsers = adminUsers.map((u) => (u.id === id ? { ...u, ...updated } : u));
+    persistUsers(newUsers);
+
+    // If updating currently logged in user
     if (user && user.id === id) {
       setUser((prev) => (prev ? { ...prev, ...updated } : null));
     }
   };
 
   const deleteAdminUser = (id: string) => {
-    setAdminUsers((prev) => prev.filter((u) => u.id !== id));
+    // Permanent deletion: deleted user is filtered out and persisted to cloud
+    const newUsers = adminUsers.filter((u) => u.id !== id);
+    persistUsers(newUsers);
+  };
+
+  const changePassword = (oldPass: string, newPass: string): { success: boolean; message: string } => {
+    if (!user) {
+      return { success: false, message: "No active administrator logged in." };
+    }
+    if (user.password && user.password !== oldPass) {
+      return { success: false, message: "Current password is incorrect." };
+    }
+    if (!newPass || newPass.trim().length < 6) {
+      return { success: false, message: "New password must be at least 6 characters long." };
+    }
+
+    const trimmed = newPass.trim();
+    updateAdminUser(user.id, { password: trimmed });
+    setUser((prev) => (prev ? { ...prev, password: trimmed } : null));
+
+    return { success: true, message: "Password updated successfully and synced across all devices!" };
+  };
+
+  const updateAvatar = (avatarUrl: string) => {
+    if (!user) return;
+    updateAdminUser(user.id, { avatar: avatarUrl });
+    setUser((prev) => (prev ? { ...prev, avatar: avatarUrl } : null));
   };
 
   const login = (email: string, pass: string): boolean => {
     const cleanEmail = email.trim().toLowerCase();
-    
-    // Check against all registered admin users
+
+    // Check against registered admin users
     const matchedUser = adminUsers.find(
       (u) =>
         u.email.toLowerCase() === cleanEmail &&
         (u.password === pass || (!u.password && pass === "admin123"))
     ) || (
-      // Built-in emergency fallbacks for owner & admin
-      (cleanEmail === "admin@vratsystem.com" ||
+      // Primary Super Admin fallbacks
+      (cleanEmail === "admin@vratsystem.co.in" ||
        cleanEmail === "nimesh.patel@vratsystem.co.in" ||
-       cleanEmail === "nimeshpatel.vsi@gmail.com") && pass === "admin123"
+       cleanEmail === "admin@vratsystem.com" ||
+       cleanEmail === "nimeshpatel.vsi@gmail.com") && (pass === "admin123" || pass === (adminUsers[0]?.password || "admin123"))
         ? {
-            id: "usr-owner",
-            name: "Nimesh Patel (Administrator)",
+            id: adminUsers[0]?.id || "usr-superadmin",
+            name: adminUsers[0]?.name || "Nimesh Patel",
             email: cleanEmail,
             role: "Super Admin" as UserRole,
-            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
+            avatar: adminUsers[0]?.avatar || "",
             lastLogin: "Just now",
             active: true,
-            password: "admin123",
+            password: adminUsers[0]?.password || "admin123",
           }
         : null
     );
@@ -172,21 +218,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const demoLogin = (role: UserRole = "Super Admin") => {
-    const roleNames: Record<UserRole, string> = {
-      "Super Admin": "Nimesh Patel (Super Admin)",
-      "Content Manager": "Pooja Verma (Content Lead)",
-      "SEO Manager": "Amit Patel (SEO Specialist)",
-      "Sales Manager": "Vikram Malhotra (Head of Sales)",
-      "Support Manager": "Suresh Nair (Support Head)",
-      "HR Manager": "Ananya Sen (HR Lead)",
-      "Editor": "Rohan Gupta (Editor)",
-    };
     const demoUser: AdminUser = {
-      id: "usr-demo-" + role.toLowerCase().replace(/\s+/g, "-"),
-      name: roleNames[role] || "Demo Admin",
-      email: `${role.toLowerCase().replace(/\s+/g, ".")}@vratsystem.co.in`,
+      id: "usr-superadmin",
+      name: "Nimesh Patel",
+      email: "nimesh.patel@vratsystem.co.in",
       role: role,
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
+      avatar: "",
       lastLogin: "Just now",
       active: true,
       password: "admin123",
@@ -247,6 +284,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         addAdminUser,
         updateAdminUser,
         deleteAdminUser,
+        changePassword,
+        updateAvatar,
         hasPermission,
         switchRole,
       }}

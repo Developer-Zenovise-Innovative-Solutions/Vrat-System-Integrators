@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import logoIcon from "../assets/logo/logo-icon.png";
 import { useAuth } from "../context/AuthContext";
 import { useCMS } from "../context/CMSContext";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   Menu,
   X,
@@ -57,7 +58,15 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1 text-slate-400">
             <Phone className="w-3 h-3 text-blue-400" />
-            24×7 Hotline: <a href={`tel:${settings.emergencyHotline}`} className="text-white hover:text-blue-400 transition font-semibold">{settings.phone}</a>
+            24×7 Hotline:{" "}
+            <a
+              href={getWhatsAppUrl(settings.emergencyHotline || settings.phone, "Hello VRAT System Integrators, I would like to inquire about:")}
+              target="_blank"
+              rel="noreferrer"
+              className="text-white hover:text-blue-400 transition font-semibold"
+            >
+              {settings.phone}
+            </a>
           </span>
           <span className="text-slate-600">|</span>
           <span className="text-slate-400">

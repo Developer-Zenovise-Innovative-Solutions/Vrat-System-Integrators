@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { useToast } from "../context/ToastContext";
+import ImageUploader from "../components/ImageUploader";
 import {
   Sliders,
   Save,
@@ -228,25 +229,15 @@ export default function AdminPagesBuilder() {
                 />
               </div>
 
-              {/* Background Image */}
+              {/* Background Image Upload System (Supabase Storage - Requirement 16) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Hero Background Image URL
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={formData.backgroundImage}
-                    onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
-                    className="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                </div>
-                {formData.backgroundImage && (
-                  <div className="mt-2 rounded-xl overflow-hidden h-28 bg-slate-900 border border-slate-800">
-                    <img src={formData.backgroundImage} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <ImageUploader
+                  value={formData.backgroundImage}
+                  onChange={(url) => setFormData({ ...formData, backgroundImage: url })}
+                  folder="heroes"
+                  label="Hero Background Image Asset"
+                  helperText="Upload HD banner image (JPG, PNG, WEBP) to cloud storage"
+                />
               </div>
 
               {/* CTA Buttons */}

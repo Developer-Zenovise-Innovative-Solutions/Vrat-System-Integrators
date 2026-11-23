@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { AdminUser, UserRole } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Shield,
   Users,
@@ -44,8 +45,8 @@ export default function AdminUsers() {
       id: "usr-" + Date.now(),
       name: "",
       email: "",
-      role: "Content Manager",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
+      role: "Super Admin",
+      avatar: "",
       lastLogin: "Never",
       active: true,
       password: generatedPass,
@@ -146,11 +147,24 @@ export default function AdminUsers() {
               {adminUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-900/50 transition">
                   <td className="p-4 flex items-center gap-3">
-                    <img
-                      src={u.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format"}
-                      alt={u.name}
-                      className="w-9 h-9 rounded-full object-cover border border-slate-800"
-                    />
+                    {u.avatar ? (
+                      <img
+                        src={u.avatar}
+                        alt={u.name}
+                        className="w-9 h-9 rounded-full object-cover border border-slate-800"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-blue-600/20 text-blue-400 font-bold flex items-center justify-center border border-blue-500/30 text-xs">
+                        {u.name
+                          ? u.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()
+                          : "U"}
+                      </div>
+                    )}
                     <div>
                       <div className="font-bold text-white text-sm">{u.name}</div>
                       <div className="text-slate-400 text-[11px]">{u.email}</div>
@@ -194,10 +208,10 @@ export default function AdminUsers() {
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    {u.id !== "usr-1" && u.id !== "usr-2" && (
+                    {u.id !== "usr-superadmin" && u.id !== user?.id && (
                       <button
                         onClick={() => {
-                          if (confirm(`Remove admin account for "${u.name}"?`)) {
+                          if (confirm(`Permanently remove admin account for "${u.name}"? This deletion will persist in the database.`)) {
                             deleteAdminUser(u.id);
                           }
                         }}
@@ -311,16 +325,13 @@ export default function AdminUsers() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Avatar Image URL (Optional)</label>
-                <input
-                  type="url"
-                  value={editingUser.avatar || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, avatar: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <ImageUploader
+                value={editingUser.avatar || ""}
+                onChange={(url) => setEditingUser({ ...editingUser, avatar: url })}
+                folder="avatars"
+                label="Administrator Profile Photo (Optional)"
+                helperText="Upload JPG or PNG portrait"
+              />
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button

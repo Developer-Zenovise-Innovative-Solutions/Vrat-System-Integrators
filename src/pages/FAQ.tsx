@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
+import { sendEmailNotification } from "../lib/emailService";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   HelpCircle,
   Search,
@@ -52,23 +54,46 @@ export default function FAQ() {
     setOpenIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleAskSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleAskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!askForm.name || !askForm.email || !askForm.question) return;
 
-    submitLead({
-      type: "Contact Inquiry",
-      name: askForm.name,
-      email: askForm.email,
-      serviceOrProduct: askForm.category,
-      message: `FAQ Inquiry: ${askForm.question}`,
-    });
+    setSubmitting(true);
+    setErrorMessage("");
 
-    setAskSuccess(true);
-    setTimeout(() => {
-      setAskSuccess(false);
-      setAskForm({ name: "", email: "", category: "CCTV", question: "" });
-    }, 2500);
+    try {
+      submitLead({
+        type: "Contact Inquiry",
+        name: askForm.name,
+        email: askForm.email,
+        serviceOrProduct: `FAQ Question [${askForm.category}]`,
+        message: `FAQ Inquiry: ${askForm.question}`,
+      });
+
+      await sendEmailNotification({
+        formType: "FAQ Enquiry / Technical Question",
+        name: askForm.name,
+        email: askForm.email,
+        subject: `[FAQ Technical Question] ${askForm.category} - ${askForm.name}`,
+        message: askForm.question,
+        details: {
+          "Question Category": askForm.category,
+        },
+      });
+
+      setAskSuccess(true);
+      setTimeout(() => {
+        setAskSuccess(false);
+        setAskForm({ name: "", email: "", category: "CCTV", question: "" });
+      }, 3500);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to submit question. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -256,11 +281,18 @@ export default function FAQ() {
                 />
               </div>
 
+              {errorMessage && (
+                <div className="p-3 rounded-lg bg-rose-500/20 border border-rose-500/30 text-rose-200 text-xs">
+                  {errorMessage}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/30 flex items-center justify-center gap-2"
+                disabled={submitting}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/30 flex items-center justify-center gap-2"
               >
-                <Send className="w-3.5 h-3.5" /> Submit Question
+                <Send className="w-3.5 h-3.5" /> {submitting ? "Sending Question..." : "Submit Question"}
               </button>
             </form>
           )}

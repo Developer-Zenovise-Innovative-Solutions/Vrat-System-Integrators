@@ -113,6 +113,8 @@ interface CMSContextType {
 
   logs: ActivityLog[];
   addLog: (action: string, module: string, details: string) => void;
+  markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
   resetToDefaults: () => void;
 }
 
@@ -159,27 +161,37 @@ const mapHeroToDB = (h: PageHeroConfig) => ({
   updated_at: new Date().toISOString(),
 });
 
-const mapSettingsFromDB = (row: any, prev: GlobalSettings): GlobalSettings => ({
-  companyName: row.company_name || prev.companyName,
-  tagline: row.tagline || prev.tagline,
-  websiteUrl: (row.social_links && row.social_links.website) || prev.websiteUrl || "https://vratsystems.com/",
-  primaryEmail: row.primary_email || prev.primaryEmail,
-  secondaryEmail: prev.secondaryEmail || "Nimeshpatel.VSI@gmail.com",
-  salesEmail: row.sales_email || prev.salesEmail,
-  supportEmail: row.support_email || prev.supportEmail,
-  careersEmail: row.careers_email || prev.careersEmail,
-  phone: row.phone || prev.phone,
-  emergencyHotline: row.emergency_hotline || prev.emergencyHotline,
-  whatsappNumber: row.whatsapp_number || prev.whatsappNumber,
-  address: row.address || prev.address,
-  cityStateZip: row.city_state_zip || prev.cityStateZip,
-  headOfficeAddress: prev.headOfficeAddress,
-  branchOfficeAddress: prev.branchOfficeAddress,
-  businessHours: row.business_hours || prev.businessHours,
-  googleMapsUrl: row.google_maps_url || prev.googleMapsUrl,
-  socialLinks: typeof row.social_links === "object" && row.social_links ? { ...prev.socialLinks, ...row.social_links } : prev.socialLinks,
-  maintenanceMode: Boolean(row.maintenance_mode),
-});
+const mapSettingsFromDB = (row: any, prev: GlobalSettings): GlobalSettings => {
+  const jsonConfig = (typeof row.social_links === "object" && row.social_links) || {};
+  return {
+    companyName: row.company_name || prev.companyName,
+    tagline: row.tagline || prev.tagline,
+    websiteUrl: jsonConfig.website || prev.websiteUrl || "https://vratsystems.com/",
+    primaryEmail: row.primary_email || prev.primaryEmail,
+    secondaryEmail: jsonConfig.secondary_email || prev.secondaryEmail || "Nimeshpatel.VSI@gmail.com",
+    salesEmail: row.sales_email || prev.salesEmail,
+    supportEmail: row.support_email || prev.supportEmail,
+    careersEmail: row.careers_email || prev.careersEmail,
+    phone: row.phone || prev.phone,
+    emergencyHotline: row.emergency_hotline || prev.emergencyHotline,
+    whatsappNumber: row.whatsapp_number || prev.whatsappNumber,
+    address: row.address || prev.address,
+    cityStateZip: row.city_state_zip || prev.cityStateZip,
+    headOfficeAddress: jsonConfig.head_office_address || prev.headOfficeAddress,
+    branchOfficeAddress: jsonConfig.branch_office_address || prev.branchOfficeAddress,
+    locations: Array.isArray(jsonConfig.locations) && jsonConfig.locations.length > 0 ? jsonConfig.locations : (prev.locations || []),
+    businessHours: row.business_hours || prev.businessHours,
+    googleMapsUrl: row.google_maps_url || prev.googleMapsUrl,
+    socialLinks: jsonConfig.social_profiles || {
+      linkedin: jsonConfig.linkedin || prev.socialLinks?.linkedin || "https://linkedin.com/company/vratsystem",
+      facebook: jsonConfig.facebook || prev.socialLinks?.facebook || "https://facebook.com/vratsystem",
+      instagram: jsonConfig.instagram || prev.socialLinks?.instagram || "https://instagram.com/vratsystem",
+      youtube: jsonConfig.youtube || prev.socialLinks?.youtube || "https://youtube.com/@vratsystem",
+      twitter: jsonConfig.twitter || prev.socialLinks?.twitter || "https://x.com/vratsystem",
+    },
+    maintenanceMode: Boolean(row.maintenance_mode),
+  };
+};
 
 const mapSettingsToDB = (s: GlobalSettings) => ({
   id: "global_config",
@@ -196,7 +208,15 @@ const mapSettingsToDB = (s: GlobalSettings) => ({
   city_state_zip: s.cityStateZip,
   business_hours: s.businessHours,
   google_maps_url: s.googleMapsUrl,
-  social_links: { ...s.socialLinks, website: s.websiteUrl || "https://vratsystems.com/" },
+  social_links: {
+    website: s.websiteUrl || "https://vratsystems.com/",
+    secondary_email: s.secondaryEmail,
+    head_office_address: s.headOfficeAddress,
+    branch_office_address: s.branchOfficeAddress,
+    locations: s.locations || [],
+    social_profiles: s.socialLinks,
+    ...s.socialLinks,
+  },
   maintenance_mode: s.maintenanceMode,
   updated_at: new Date().toISOString(),
 });
@@ -600,7 +620,7 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   const [heroConfigs, setHeroConfigs] = useState<Record<string, PageHeroConfig>>(() => loadFromStorage("heroes", INITIAL_HERO_CONFIGS));
   const [seoMetadata, setSeoMetadata] = useState<Record<string, SEOMetadata>>(() => loadFromStorage("seo", {}));
   const [logs, setLogs] = useState<ActivityLog[]>(() => loadFromStorage("logs", [
-    { id: "log-1", user: "Rajesh Sharma", role: "Super Admin", action: "System Initialized", module: "System", details: "All 29 website content modules and CMS tables initialized.", timestamp: "2026-08-24 09:00" }
+    { id: "log-1", user: "Nimesh Patel", role: "Super Admin", action: "System Initialized", module: "System", details: "All 29 website content modules and CMS tables initialized.", timestamp: "2026-08-24 09:00", read: true }
   ]));
 
   // Auto-sync state changes to localStorage as reliable cache
@@ -803,6 +823,16 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
         // silent fallback
       }
     }
+  };
+
+  const markNotificationAsRead = (id: string) => {
+    setLogs((prev) =>
+      prev.map((log) => (log.id === id ? { ...log, read: true } : log))
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setLogs((prev) => prev.map((log) => ({ ...log, read: true })));
   };
 
   // 1. Settings
@@ -1533,6 +1563,8 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
         updateSEOMetadata,
         logs,
         addLog,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
         resetToDefaults,
       }}
     >

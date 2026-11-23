@@ -26,6 +26,7 @@ export interface ActivityLog {
   module: string;
   details: string;
   timestamp: string;
+  read?: boolean;
 }
 
 export interface ServiceItem {
@@ -261,6 +262,20 @@ export interface SEOMetadata {
   indexPage: boolean;
 }
 
+export type LocationType = "Head Office" | "Registered Office" | "Branch Office";
+
+export interface BusinessLocation {
+  id: string;
+  name: string;
+  type: LocationType;
+  phone: string;
+  whatsappNumber: string;
+  address: string;
+  googleMapsUrl: string;
+  email?: string;
+  active: boolean;
+}
+
 export interface GlobalSettings {
   companyName: string;
   tagline: string;
@@ -277,6 +292,7 @@ export interface GlobalSettings {
   cityStateZip: string;
   headOfficeAddress?: string;
   branchOfficeAddress?: string;
+  locations?: BusinessLocation[];
   businessHours: string;
   googleMapsUrl: string;
   socialLinks: {

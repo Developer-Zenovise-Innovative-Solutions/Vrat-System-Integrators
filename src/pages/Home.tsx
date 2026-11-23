@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
+import { sendEmailNotification } from "../lib/emailService";
 import { STATS, SERVICES, INDUSTRIES, TESTIMONIALS, PROCESS_STEPS, WHY_VRAT } from "../data";
 
 function useInView(threshold = 0.15) {
@@ -24,10 +25,61 @@ function AnimSection({ children, className = "" }: { children: React.ReactNode; 
 }
 
 export default function Home() {
-  const { heroConfigs, partners, submitLead } = useCMS();
+  const { heroConfigs, partners, submitLead, leads } = useCMS();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [newsError, setNewsError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleHomeNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    const trimmed = email.trim().toLowerCase();
+    const isDuplicate = leads.some(
+      (l) => l.type === "Newsletter" && l.email?.trim().toLowerCase() === trimmed
+    );
+
+    if (isDuplicate) {
+      setNewsError("You are already subscribed to our newsletter!");
+      setTimeout(() => setNewsError(""), 3500);
+      return;
+    }
+
+    setSubmitting(true);
+    setNewsError("");
+
+    try {
+      submitLead({
+        type: "Newsletter",
+        name: "Website Visitor",
+        email: trimmed,
+        message: "Subscribed via Home Page Newsletter",
+      });
+
+      await sendEmailNotification({
+        formType: "Newsletter Subscription",
+        name: "Website Visitor",
+        email: trimmed,
+        subject: `[New Newsletter Subscriber] ${trimmed}`,
+        message: `A new visitor subscribed to the VRAT newsletter from the Home Page.`,
+        details: {
+          "Source": "Home Page Banner",
+          "Subscriber Email": trimmed,
+          "Subscription Time": new Date().toLocaleString(),
+        },
+      });
+
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 4000);
+    } catch (err: any) {
+      setNewsError(err.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const homeHero = heroConfigs["home"] || {
     heading: "Building Smarter, Safer & More Secure Environments",
@@ -499,25 +551,37 @@ export default function Home() {
           <p className="text-slate-400 text-sm mb-6">
             Subscribe to receive the latest updates on security technologies, industry trends, and company news.
           </p>
-          <form
-            onSubmit={(e) => { e.preventDefault(); setEmail(""); }}
-            className="flex gap-3 max-w-md mx-auto"
-          >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address"
-              required
-              className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-400"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition-colors"
-            >
-              Subscribe
-            </button>
-          </form>
+
+          {subscribed ? (
+            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm font-semibold max-w-md mx-auto">
+              ✓ Thank you for subscribing! Check your inbox for confirmation.
+            </div>
+          ) : (
+            <form onSubmit={handleHomeNewsletter} className="flex flex-col gap-2 max-w-md mx-auto">
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email address"
+                  required
+                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-400"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition-colors whitespace-nowrap"
+                >
+                  {submitting ? "Subscribing..." : "Subscribe"}
+                </button>
+              </div>
+              {newsError && (
+                <div className="text-rose-400 text-xs text-left">
+                  {newsError}
+                </div>
+              )}
+            </form>
+          )}
         </div>
       </section>
     </div>

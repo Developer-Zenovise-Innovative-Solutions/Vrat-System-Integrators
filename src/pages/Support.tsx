@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
+import { sendEmailNotification } from "../lib/emailService";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   Headphones,
   ShieldCheck,
@@ -32,34 +34,63 @@ export default function Support() {
   });
   const [ticketSuccess, setTicketSuccess] = useState(false);
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketForm.name || !ticketForm.email || !ticketForm.phone) return;
 
-    submitLead({
-      type: "Support Request",
-      name: ticketForm.name,
-      company: ticketForm.company,
-      email: ticketForm.email,
-      phone: ticketForm.phone,
-      serviceOrProduct: `${ticketForm.serviceOrSystem} [Priority: ${ticketForm.priority}]`,
-      message: `Support Ticket Description: ${ticketForm.description}. Site: ${ticketForm.siteAddress}`,
-    });
+    setSubmitting(true);
+    setErrorMessage("");
 
-    setTicketSuccess(true);
-    setTimeout(() => {
-      setTicketSuccess(false);
-      setTicketForm({
-        name: "",
-        company: "",
-        email: "",
-        phone: "",
-        serviceOrSystem: "CCTV Failure",
-        priority: "High",
-        siteAddress: "",
-        description: "",
+    try {
+      // 1. Save in CRM
+      submitLead({
+        type: "Support Request",
+        name: ticketForm.name,
+        company: ticketForm.company,
+        email: ticketForm.email,
+        phone: ticketForm.phone,
+        serviceOrProduct: `${ticketForm.serviceOrSystem} [Priority: ${ticketForm.priority}]`,
+        message: `Support Ticket Description: ${ticketForm.description}. Site: ${ticketForm.siteAddress}`,
       });
-    }, 2500);
+
+      // 2. Dispatch via SMTP to nimeshpatel.vsi@gmail.com
+      await sendEmailNotification({
+        formType: "Technical Support Ticket",
+        name: ticketForm.name,
+        email: ticketForm.email,
+        phone: ticketForm.phone,
+        company: ticketForm.company,
+        subject: `[Support Ticket - ${ticketForm.priority}] ${ticketForm.serviceOrSystem} - ${ticketForm.name}`,
+        message: ticketForm.description,
+        details: {
+          "System / Service Affected": ticketForm.serviceOrSystem,
+          "Severity / Priority": ticketForm.priority,
+          "Site / Facility Location": ticketForm.siteAddress || "Not specified",
+        },
+      });
+
+      setTicketSuccess(true);
+      setTimeout(() => {
+        setTicketSuccess(false);
+        setTicketForm({
+          name: "",
+          company: "",
+          email: "",
+          phone: "",
+          serviceOrSystem: "CCTV Failure",
+          priority: "High",
+          siteAddress: "",
+          description: "",
+        });
+      }, 3500);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to submit ticket. Please reach out via WhatsApp directly.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -89,11 +120,13 @@ export default function Support() {
                   <ArrowRight className="w-4 h-4" />
                 </a>
                 <a
-                  href={`tel:${settings.emergencyHotline}`}
+                  href={getWhatsAppUrl(settings.emergencyHotline || settings.phone, "Hello VRAT Systems, I am facing an emergency technical breakdown and need immediate assistance.")}
+                  target="_blank"
+                  rel="noreferrer"
                   className="px-6 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl transition shadow-lg shadow-rose-600/30 flex items-center gap-2"
                 >
                   <AlertTriangle className="w-4 h-4" />
-                  Emergency Hotline
+                  WhatsApp Emergency Hotline
                 </a>
               </div>
             </div>
@@ -274,11 +307,18 @@ export default function Support() {
                   />
                 </div>
 
+                {errorMessage && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                    {errorMessage}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                  disabled={submitting}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  <Send className="w-3.5 h-3.5" /> Submit Support Ticket
+                  <Send className="w-3.5 h-3.5" /> {submitting ? "Submitting Ticket..." : "Submit Support Ticket"}
                 </button>
               </form>
             )}
@@ -328,8 +368,13 @@ export default function Support() {
                 <div className="flex items-center gap-3">
                   <PhoneCall className="w-4 h-4 text-blue-400" />
                   <div>
-                    <div className="text-slate-400">Customer Care Number</div>
-                    <a href="tel:+919510759646" className="text-white font-bold hover:text-blue-300 transition text-sm">
+                    <div className="text-slate-400">Customer Care Number (Click for WhatsApp)</div>
+                    <a
+                      href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT Customer Care, I would like to inquire about support.")}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-white font-bold hover:text-blue-300 transition text-sm flex items-center gap-1.5"
+                    >
                       +91 95107 59646
                     </a>
                   </div>

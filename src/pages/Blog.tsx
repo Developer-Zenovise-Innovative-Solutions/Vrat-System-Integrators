@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
 import { BlogPost } from "../types";
+import { sendEmailNotification } from "../lib/emailService";
 import {
   BookOpen,
   Search,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 
 export default function Blog() {
-  const { blogs, heroConfigs, submitLead } = useCMS();
+  const { blogs, heroConfigs, submitLead, leads } = useCMS();
   const hero = heroConfigs["blog"];
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,6 +29,8 @@ export default function Blog() {
   const [newsEmail, setNewsEmail] = useState("");
   const [newsName, setNewsName] = useState("");
   const [newsSuccess, setNewsSuccess] = useState(false);
+  const [newsError, setNewsError] = useState("");
+  const [newsSubmitting, setNewsSubmitting] = useState(false);
 
   const categories = [
     "All",
@@ -50,23 +53,57 @@ export default function Blog() {
 
   const featuredBlog = blogs.find((b) => b.isFeatured) || blogs[0];
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsEmail) return;
 
-    submitLead({
-      type: "Newsletter",
-      name: newsName || "Newsletter Subscriber",
-      email: newsEmail,
-      message: "Subscribed to VRAT Tech & Security Insights Newsletter",
-    });
+    const trimmed = newsEmail.trim().toLowerCase();
+    const isDuplicate = leads.some(
+      (l) => l.type === "Newsletter" && l.email?.trim().toLowerCase() === trimmed
+    );
 
-    setNewsSuccess(true);
-    setTimeout(() => {
-      setNewsSuccess(false);
+    if (isDuplicate) {
+      setNewsError("You are already subscribed to our newsletter!");
+      setTimeout(() => setNewsError(""), 3500);
+      return;
+    }
+
+    setNewsSubmitting(true);
+    setNewsError("");
+
+    try {
+      submitLead({
+        type: "Newsletter",
+        name: newsName || "Newsletter Subscriber",
+        email: trimmed,
+        message: "Subscribed to VRAT Tech & Security Insights Newsletter",
+      });
+
+      await sendEmailNotification({
+        formType: "Newsletter Subscription",
+        name: newsName || "Newsletter Subscriber",
+        email: trimmed,
+        subject: `[New Newsletter Subscriber] ${trimmed}`,
+        message: `A new reader subscribed to the VRAT newsletter from the Blog page.`,
+        details: {
+          "Source": "Blog Insights Strip",
+          "Subscriber Email": trimmed,
+          "Subscriber Name": newsName || "Anonymous",
+          "Subscription Time": new Date().toLocaleString(),
+        },
+      });
+
+      setNewsSuccess(true);
       setNewsEmail("");
       setNewsName("");
-    }, 2500);
+      setTimeout(() => {
+        setNewsSuccess(false);
+      }, 4000);
+    } catch (err: any) {
+      setNewsError(err.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setNewsSubmitting(false);
+    }
   };
 
   return (
@@ -260,21 +297,29 @@ export default function Blog() {
                 <CheckCircle2 className="w-5 h-5" /> Thank you for subscribing!
               </div>
             ) : (
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto pt-4">
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter your corporate email..."
-                  value={newsEmail}
-                  onChange={(e) => setNewsEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-blue-600/30 whitespace-nowrap"
-                >
-                  Subscribe
-                </button>
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2 max-w-lg mx-auto pt-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Enter your corporate email..."
+                    value={newsEmail}
+                    onChange={(e) => setNewsEmail(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={newsSubmitting}
+                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold rounded-xl text-sm transition shadow-md shadow-blue-600/30 whitespace-nowrap"
+                  >
+                    {newsSubmitting ? "Subscribing..." : "Subscribe"}
+                  </button>
+                </div>
+                {newsError && (
+                  <div className="text-rose-400 text-xs text-left">
+                    {newsError}
+                  </div>
+                )}
               </form>
             )}
           </div>

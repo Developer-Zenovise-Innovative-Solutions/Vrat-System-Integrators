@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   Building2,
   Factory,
@@ -318,10 +319,12 @@ export default function Solutions() {
                   Speak directly with an enterprise solutions architect.
                 </p>
                 <a
-                  href="tel:+919825012345"
+                  href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT System, I would like consultation regarding enterprise security solutions.")}
+                  target="_blank"
+                  rel="noreferrer"
                   className="inline-flex items-center gap-2 text-white font-bold text-sm bg-blue-600 px-4 py-2.5 rounded-lg hover:bg-blue-500 transition"
                 >
-                  Call +91 98250 12345
+                  WhatsApp Consultation (+91 95107 59646)
                 </a>
               </div>
             </div>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCMS } from "../context/CMSContext";
 import { ProductItem } from "../types";
+import { sendEmailNotification } from "../lib/emailService";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   Search,
   SlidersHorizontal,
@@ -66,36 +68,66 @@ export default function Products() {
     }
   };
 
-  const handleQuoteSubmit = (e: React.FormEvent) => {
+  const [quoteSubmitting, setQuoteSubmitting] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+
+  const handleQuoteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quoteForm.name || !quoteForm.email) return;
 
-    submitLead({
-      type: "Product Quote",
-      name: quoteForm.name,
-      company: quoteForm.company,
-      email: quoteForm.email,
-      phone: quoteForm.phone,
-      city: quoteForm.city,
-      serviceOrProduct: quoteProduct?.name || "General Product Inquiry",
-      estimatedSize: `Qty: ${quoteForm.quantity}`,
-      message: quoteForm.message || `Quote request for ${quoteProduct?.name || "products"}`,
-    });
+    setQuoteSubmitting(true);
+    setQuoteError("");
 
-    setQuoteSuccess(true);
-    setTimeout(() => {
-      setQuoteSuccess(false);
-      setQuoteProduct(null);
-      setQuoteForm({
-        name: "",
-        company: "",
-        email: "",
-        phone: "",
-        city: "",
-        quantity: "1-5",
-        message: "",
+    try {
+      submitLead({
+        type: "Product Quote",
+        name: quoteForm.name,
+        company: quoteForm.company,
+        email: quoteForm.email,
+        phone: quoteForm.phone,
+        city: quoteForm.city,
+        serviceOrProduct: quoteProduct?.name || "General Product Inquiry",
+        estimatedSize: `Qty: ${quoteForm.quantity}`,
+        message: quoteForm.message || `Quote request for ${quoteProduct?.name || "products"} [ID: ${quoteProduct?.id || "N/A"}]`,
       });
-    }, 2000);
+
+      await sendEmailNotification({
+        formType: "Product Quotation Request",
+        name: quoteForm.name,
+        email: quoteForm.email,
+        phone: quoteForm.phone,
+        company: quoteForm.company,
+        subject: `[Quotation Request] ${quoteProduct?.name || "Product"} (ID: ${quoteProduct?.id}) - ${quoteForm.name}`,
+        message: quoteForm.message,
+        details: {
+          "Product Name": quoteProduct?.name || "General Inquiry",
+          "Product ID": quoteProduct?.id || "N/A",
+          "Category": quoteProduct?.category || "N/A",
+          "Brand": quoteProduct?.brand || "N/A",
+          "Estimated Quantity": quoteForm.quantity,
+          "City": quoteForm.city || "Not specified",
+        },
+      });
+
+      setQuoteSuccess(true);
+      setTimeout(() => {
+        setQuoteSuccess(false);
+        setQuoteProduct(null);
+        setQuoteForm({
+          name: "",
+          company: "",
+          email: "",
+          phone: "",
+          city: "",
+          quantity: "1-5",
+          message: "",
+        });
+      }, 2500);
+    } catch (err: any) {
+      setQuoteError(err.message || "Failed to submit quote request. Please try again or WhatsApp us.");
+    } finally {
+      setQuoteSubmitting(false);
+    }
   };
 
   return (
@@ -549,11 +581,18 @@ export default function Products() {
                     placeholder="Provide details such as location, installation support required, or timeline..."
                   />
                 </div>
+                {quoteError && (
+                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                    {quoteError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                  disabled={quoteSubmitting}
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  <Send className="w-3.5 h-3.5" /> Submit Quote Request
+                  <Send className="w-3.5 h-3.5" /> {quoteSubmitting ? "Submitting Quote Request..." : "Submit Quote Request"}
                 </button>
               </form>
             )}
