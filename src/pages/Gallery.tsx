@@ -106,26 +106,30 @@ const GALLERY_DATA: GalleryItem[] = [
 ];
 
 export default function Gallery() {
-  const { heroConfigs } = useCMS();
+  const { heroConfigs, mediaItems } = useCMS();
   const hero = heroConfigs["gallery"];
 
   const [activeCat, setActiveCat] = useState("All");
   const [sliderPos, setSliderPos] = useState(50);
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
 
+  const cmsGalleryItems: GalleryItem[] = (mediaItems || []).map((m) => ({
+    id: m.id,
+    title: m.title,
+    category: m.category || "Commercial",
+    imageUrl: m.url,
+    location: "Installation Site, India",
+    techTags: ["Installed Solution"],
+  }));
+
+  const allItems = [...cmsGalleryItems, ...GALLERY_DATA];
+
   const categories = [
     "All",
-    "Commercial",
-    "Industrial",
-    "Residential",
-    "Education",
-    "Healthcare",
-    "Retail",
-    "Warehousing",
-    "Installation Stages"
+    ...Array.from(new Set(allItems.map((i) => i.category).filter(Boolean))),
   ];
 
-  const filteredItems = GALLERY_DATA.filter(
+  const filteredItems = allItems.filter(
     (item) => activeCat === "All" || item.category === activeCat
   );
 

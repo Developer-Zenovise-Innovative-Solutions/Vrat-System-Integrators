@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { useToast } from "../context/ToastContext";
 import { SEOMetadata } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Search,
   Save,
@@ -146,15 +147,13 @@ export default function AdminSEO() {
               <div className="text-[10px] text-slate-500 mt-1">{formData.metaDescription.length} / 160 recommended characters</div>
             </div>
 
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Social OpenGraph Image URL (1200x630)</label>
-              <input
-                type="url"
-                value={formData.ogImage}
-                onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
-              />
-            </div>
+            <ImageUploader
+              value={formData.ogImage}
+              onChange={(url) => setFormData({ ...formData, ogImage: url })}
+              folder="seo"
+              label="Social OpenGraph Sharing Image (1200x630)"
+              helperText="Upload JPG, PNG or WEBP social preview banner"
+            />
 
             <div>
               <label className="block text-slate-300 font-semibold mb-1">SEO Keywords (Comma-separated)</label>

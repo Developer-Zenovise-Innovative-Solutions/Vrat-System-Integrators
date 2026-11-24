@@ -458,6 +458,7 @@ export default function AdminLayout() {
                   <div className="space-y-1">
                     <button
                       onClick={() => {
+                        setAvatarUrl(user?.avatar || "");
                         setShowAvatarModal(true);
                         setShowProfileMenu(false);
                       }}

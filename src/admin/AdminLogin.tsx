@@ -90,7 +90,7 @@ export default function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="admin@vratsystem.com"
+                  placeholder="nimesh.patel@vratsystem.co.in"
                 />
               </div>
             </div>

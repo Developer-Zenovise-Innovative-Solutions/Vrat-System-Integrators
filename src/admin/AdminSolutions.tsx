@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { IndustrySolution } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   FileText,
   Plus,
@@ -172,15 +173,13 @@ export default function AdminSolutions() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={editingSol.image}
-                  onChange={(e) => setEditingSol({ ...editingSol, image: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
-                />
-              </div>
+              <ImageUploader
+                value={editingSol.image}
+                onChange={(url) => setEditingSol({ ...editingSol, image: url })}
+                folder="solutions"
+                label="Solution Image Asset (Dropbox / File Upload)"
+                helperText="Upload JPG, PNG or WEBP for this sector"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Industry Challenges (Comma-separated)</label>

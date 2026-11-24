@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isInitialLoad = useRef(true);
 
-  // Sync admin users with Supabase settings.social_links.admin_users (Requirement 8C: Permanent Deletion Persistence)
+  // Sync admin users with Supabase settings.social_links.admin_users (Requirement 8C: Permanent Cross-Device Sync)
   useEffect(() => {
     async function loadCloudUsers() {
       if (!isSupabaseConfigured) return;
@@ -79,20 +79,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const cloudUsers: AdminUser[] = data[0].social_links.admin_users;
           if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
             setAdminUsers(cloudUsers);
-            localStorage.setItem("vrat_admin_users", JSON.stringify(cloudUsers));
+            try {
+              localStorage.setItem("vrat_admin_users", JSON.stringify(cloudUsers));
+            } catch (e) {}
+
+            // CRITICAL: Synchronize the currently active logged-in user with cloud data
+            // This ensures other devices (such as mobile devices) instantly display the new avatar
+            setUser((currentUser) => {
+              if (!currentUser) return null;
+              const matched = cloudUsers.find(
+                (u) => u.id === currentUser.id || u.email.toLowerCase() === currentUser.email.toLowerCase()
+              );
+              if (matched) {
+                const merged = { ...currentUser, ...matched };
+                try {
+                  sessionStorage.setItem("vrat_admin_active_session", JSON.stringify(merged));
+                } catch (e) {}
+                return merged;
+              }
+              return currentUser;
+            });
           }
         }
       } catch (e) {
         console.warn("Could not sync cloud admin users:", e);
       }
     }
+
     loadCloudUsers();
+
+    // Re-check on tab focus so mobile and other devices update without refresh
+    const handleFocus = () => loadCloudUsers();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   // Save changes to localStorage and Supabase
   const persistUsers = async (newUsers: AdminUser[]) => {
     setAdminUsers(newUsers);
-    localStorage.setItem("vrat_admin_users", JSON.stringify(newUsers));
+
+    // Safely persist to localStorage with QuotaExceededError protection
+    try {
+      localStorage.setItem("vrat_admin_users", JSON.stringify(newUsers));
+    } catch (err) {
+      console.warn("localStorage quota warning (ignored safely):", err);
+    }
 
     if (isSupabaseConfigured) {
       try {
@@ -119,7 +150,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isInitialLoad.current = false;
       return;
     }
-    localStorage.setItem("vrat_admin_users", JSON.stringify(adminUsers));
+    try {
+      localStorage.setItem("vrat_admin_users", JSON.stringify(adminUsers));
+    } catch (e) {}
   }, [adminUsers]);
 
   useEffect(() => {
@@ -175,7 +208,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateAvatar = (avatarUrl: string) => {
     if (!user) return;
     updateAdminUser(user.id, { avatar: avatarUrl });
-    setUser((prev) => (prev ? { ...prev, avatar: avatarUrl } : null));
+    const updated = { ...user, avatar: avatarUrl };
+    setUser(updated);
+    try {
+      sessionStorage.setItem("vrat_admin_active_session", JSON.stringify(updated));
+    } catch (e) {}
   };
 
   const login = (email: string, pass: string): boolean => {

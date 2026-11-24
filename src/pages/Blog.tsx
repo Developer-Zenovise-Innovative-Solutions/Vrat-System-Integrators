@@ -34,12 +34,7 @@ export default function Blog() {
 
   const categories = [
     "All",
-    "AI Surveillance",
-    "Fire Safety",
-    "Networking",
-    "Access Control",
-    "Home Automation",
-    "Smart Cities",
+    ...Array.from(new Set(blogs.map((b) => b.category).filter(Boolean))),
   ];
 
   const filteredBlogs = blogs.filter((b) => {

@@ -25,7 +25,7 @@ function AnimSection({ children, className = "" }: { children: React.ReactNode; 
 }
 
 export default function Home() {
-  const { heroConfigs, partners, submitLead, leads } = useCMS();
+  const { heroConfigs, partners, submitLead, leads, services, testimonials, caseStudies, settings } = useCMS();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -92,10 +92,19 @@ export default function Home() {
     showSection: true,
   };
 
+  const displayServices = services && services.length > 0
+    ? services.filter((s) => s.status !== "Draft").slice(0, 6)
+    : SERVICES.slice(0, 6);
+
+  const displayTestimonials = testimonials && testimonials.length > 0
+    ? testimonials.filter((t) => t.status !== "Draft")
+    : TESTIMONIALS;
+
   useEffect(() => {
-    const t = setInterval(() => setActiveTestimonial((p) => (p + 1) % TESTIMONIALS.length), 5000);
+    if (displayTestimonials.length <= 1) return;
+    const t = setInterval(() => setActiveTestimonial((p) => (p + 1) % displayTestimonials.length), 5000);
     return () => clearInterval(t);
-  }, []);
+  }, [displayTestimonials.length]);
 
   return (
     <div className="overflow-x-hidden">
@@ -267,7 +276,7 @@ export default function Home() {
           </AnimSection>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((service, i) => (
+            {displayServices.map((service, i) => (
               <AnimSection key={service.id}>
                 <div className="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm card-hover h-full flex flex-col">
                   <div className="relative h-44 overflow-hidden bg-blue-50">
@@ -284,7 +293,7 @@ export default function Home() {
                     <h3 className="font-bold text-slate-900 text-lg mb-2">{service.title}</h3>
                     <p className="text-slate-600 text-sm leading-relaxed flex-1 mb-4">{service.shortDesc}</p>
                     <Link
-                      to={service.slug}
+                      to={service.slug.startsWith("/") ? service.slug : `/services/${service.slug}`}
                       className="inline-flex items-center gap-1.5 text-blue-600 font-semibold text-sm hover:gap-2.5 transition-all group"
                     >
                       Learn More
@@ -494,24 +503,41 @@ export default function Home() {
             <svg className="w-12 h-12 text-blue-200 mb-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
             </svg>
-            <p className="text-slate-700 text-xl leading-relaxed mb-8 font-medium italic">
-              "{TESTIMONIALS[activeTestimonial].quote}"
-            </p>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold text-slate-900">{TESTIMONIALS[activeTestimonial].client}</div>
-                <div className="text-blue-600 text-sm">{TESTIMONIALS[activeTestimonial].sector}</div>
-              </div>
-              <div className="flex gap-2">
-                {TESTIMONIALS.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveTestimonial(i)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeTestimonial ? "bg-blue-600 w-6" : "bg-blue-200"}`}
-                  />
-                ))}
-              </div>
-            </div>
+            {displayTestimonials.length > 0 && (
+              <>
+                <p className="text-slate-700 text-xl leading-relaxed mb-8 font-medium italic">
+                  "{displayTestimonials[activeTestimonial % displayTestimonials.length].quote}"
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {displayTestimonials[activeTestimonial % displayTestimonials.length].avatar && (
+                      <img
+                        src={displayTestimonials[activeTestimonial % displayTestimonials.length].avatar}
+                        alt="Client"
+                        className="w-10 h-10 rounded-full object-cover border border-blue-200"
+                      />
+                    )}
+                    <div>
+                      <div className="font-bold text-slate-900">
+                        {displayTestimonials[activeTestimonial % displayTestimonials.length].name || (displayTestimonials[activeTestimonial % displayTestimonials.length] as any).client}
+                      </div>
+                      <div className="text-blue-600 text-sm">
+                        {displayTestimonials[activeTestimonial % displayTestimonials.length].company || (displayTestimonials[activeTestimonial % displayTestimonials.length] as any).sector}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {displayTestimonials.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveTestimonial(i)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${i === (activeTestimonial % displayTestimonials.length) ? "bg-blue-600 w-6" : "bg-blue-200"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

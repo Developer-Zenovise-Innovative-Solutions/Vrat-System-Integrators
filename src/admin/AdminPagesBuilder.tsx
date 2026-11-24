@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCMS } from "../context/CMSContext";
 import { useToast } from "../context/ToastContext";
 import ImageUploader from "../components/ImageUploader";
@@ -41,6 +41,12 @@ export default function AdminPagesBuilder() {
   };
 
   const [formData, setFormData] = useState(activeConfig);
+
+  useEffect(() => {
+    if (heroConfigs[selectedPageId]) {
+      setFormData(heroConfigs[selectedPageId]);
+    }
+  }, [heroConfigs, selectedPageId]);
 
   const handleSelectPage = (pageId: string) => {
     setSelectedPageId(pageId);

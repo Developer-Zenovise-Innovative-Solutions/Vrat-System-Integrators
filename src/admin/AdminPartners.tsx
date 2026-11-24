@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { PartnerBrand } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Handshake,
   Plus,
@@ -36,7 +37,7 @@ export default function AdminPartners() {
 
     if (isNew) {
       const { id, ...rest } = editingPartner;
-      addPartner({ ...rest, logo: rest.name });
+      addPartner({ ...rest, logo: rest.logo || rest.name });
     } else {
       updatePartner(editingPartner.id, editingPartner);
     }
@@ -70,8 +71,12 @@ export default function AdminPartners() {
             className="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between hover:border-slate-700 transition"
           >
             <div>
-              <div className="h-16 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-base text-white mb-3">
-                {p.name}
+              <div className="h-16 rounded-xl bg-slate-900 flex items-center justify-center font-bold text-base text-white mb-3 p-2">
+                {p.logo && (p.logo.startsWith("http") || p.logo.startsWith("data:")) ? (
+                  <img src={p.logo} alt={p.name} className="max-h-12 max-w-[120px] object-contain" />
+                ) : (
+                  p.name
+                )}
               </div>
               <div className="text-[11px] text-blue-400 font-semibold">{p.category}</div>
               <a
@@ -143,6 +148,14 @@ export default function AdminPartners() {
                   placeholder="e.g. Surveillance, Fire Safety, Networking"
                 />
               </div>
+
+              <ImageUploader
+                value={editingPartner.logo && (editingPartner.logo.startsWith("http") || editingPartner.logo.startsWith("data:")) ? editingPartner.logo : ""}
+                onChange={(url) => setEditingPartner({ ...editingPartner, logo: url })}
+                folder="partners"
+                label="Partner Brand Logo Image (Optional)"
+                helperText="Upload transparent PNG, SVG or WEBP partner logo"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Website URL</label>

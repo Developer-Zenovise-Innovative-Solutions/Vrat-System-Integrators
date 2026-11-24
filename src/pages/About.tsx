@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useCMS } from "../context/CMSContext";
 import { TIMELINE, CORE_VALUES, PARTNERS, WHY_VRAT } from "../data";
 
 function useInView(threshold = 0.15) {
@@ -34,41 +35,56 @@ const TEAM_ROLES = [
 ];
 
 export default function About() {
+  const { heroConfigs, settings } = useCMS();
+  const hero = heroConfigs["about"] || {
+    heading: "Empowering Secure Spaces Through Innovation & Excellence",
+    subtitle: "For over 17 years, VRAT System Integrators has been delivering intelligent electronic security, surveillance, networking, and automation solutions across India.",
+    backgroundImage: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=1920&h=600&fit=crop&auto=format",
+    primaryCtaText: "Meet Our Team",
+    primaryCtaLink: "/contact",
+    secondaryCtaText: "Contact Our Experts",
+    secondaryCtaLink: "/contact",
+    showSection: true,
+  };
+
   return (
     <div className="overflow-x-hidden">
       {/* HERO */}
-      <section className="relative py-32 gradient-navy overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=1920&h=600&fit=crop&auto=format"
-            alt="VRAT engineers working on security system installation"
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 to-[#162B56]/80" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25 mb-6">
-              <span className="text-blue-300 text-sm font-medium">About VRAT System Integrators</span>
-            </div>
-            <h1 className="font-serif text-5xl lg:text-6xl text-white leading-tight mb-6">
-              Empowering Secure Spaces Through{" "}
-              <span className="text-blue-300">Innovation & Excellence</span>
-            </h1>
-            <p className="text-blue-100/80 text-xl leading-relaxed mb-8">
-              For over 17 years, VRAT System Integrators has been delivering intelligent electronic security, surveillance, networking, and automation solutions that protect businesses, institutions, and communities across India.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/contact" className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all">
-                Meet Our Team
-              </Link>
-              <Link to="/contact" className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all">
-                Contact Our Experts
-              </Link>
+      {hero.showSection !== false && (
+        <section className="relative py-32 gradient-navy overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={hero.backgroundImage || "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=1920&h=600&fit=crop&auto=format"}
+              alt="VRAT engineers working on security system installation"
+              className="w-full h-full object-cover opacity-20"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 to-[#162B56]/80" />
+          </div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl animate-fade-up">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25 mb-6">
+                <span className="text-blue-300 text-sm font-medium">About {settings.companyName || "VRAT System Integrators"}</span>
+              </div>
+              <h1 className="font-serif text-5xl lg:text-6xl text-white leading-tight mb-6">
+                {hero.heading}
+              </h1>
+              <p className="text-blue-100/80 text-xl leading-relaxed mb-8">
+                {hero.subtitle}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to={hero.primaryCtaLink || "/contact"} className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30">
+                  {hero.primaryCtaText || "Meet Our Team"}
+                </Link>
+                {hero.secondaryCtaText && (
+                  <Link to={hero.secondaryCtaLink || "/contact"} className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all">
+                    {hero.secondaryCtaText}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* COMPANY INTRODUCTION */}
       <section className="py-24 bg-white">

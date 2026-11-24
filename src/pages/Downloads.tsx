@@ -60,6 +60,16 @@ export default function Downloads() {
     incrementDownloadCount(doc.id);
     setDownloadSuccess(doc.title);
     setTimeout(() => setDownloadSuccess(null), 3000);
+
+    if (doc.downloadUrl && doc.downloadUrl !== "#file") {
+      const a = document.createElement("a");
+      a.href = doc.downloadUrl;
+      a.download = `${doc.title}.${doc.fileType.toLowerCase()}`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const [submitting, setSubmitting] = useState(false);

@@ -272,15 +272,17 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">Business & Sales</h3>
             <p className="text-slate-500 text-xs mb-3">Quotations, product pricing & enterprise tenders.</p>
             <div className="space-y-1">
-              <a href="mailto:Sales@vratsystem.co.in" className="text-blue-600 font-semibold text-xs hover:underline block truncate">
-                Sales@vratsystem.co.in
+              <a href={`mailto:${settings.salesEmail || "Sales@vratsystem.co.in"}`} className="text-blue-600 font-semibold text-xs hover:underline block truncate">
+                {settings.salesEmail || "Sales@vratsystem.co.in"}
               </a>
-              <a href="mailto:Nimesh.patel@vratsystem.co.in" className="text-slate-600 font-medium text-xs hover:text-blue-600 hover:underline block truncate">
-                Nimesh.patel@vratsystem.co.in
+              <a href={`mailto:${settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}`} className="text-slate-600 font-medium text-xs hover:text-blue-600 hover:underline block truncate">
+                {settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}
               </a>
-              <a href="mailto:Nimeshpatel.VSI@gmail.com" className="text-slate-500 font-medium text-[11px] hover:text-blue-600 hover:underline block truncate">
-                Nimeshpatel.VSI@gmail.com
-              </a>
+              {settings.secondaryEmail && (
+                <a href={`mailto:${settings.secondaryEmail}`} className="text-slate-500 font-medium text-[11px] hover:text-blue-600 hover:underline block truncate">
+                  {settings.secondaryEmail}
+                </a>
+              )}
             </div>
           </div>
 
@@ -292,17 +294,17 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">Customer Care</h3>
             <p className="text-slate-500 text-xs mb-3">Service requests, breakdown support & AMC tickets.</p>
             <div className="space-y-1">
-              <a href="mailto:Service@vratsystem.co.in" className="text-emerald-600 font-semibold text-xs hover:underline block truncate">
-                Service@vratsystem.co.in
+              <a href={`mailto:${settings.supportEmail || "Service@vratsystem.co.in"}`} className="text-emerald-600 font-semibold text-xs hover:underline block truncate">
+                {settings.supportEmail || "Service@vratsystem.co.in"}
               </a>
               <a
-                href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT Customer Care, I need support with:")}
+                href={getWhatsAppUrl(settings.whatsappNumber || settings.phone, "Hello VRAT Customer Care, I need support with:")}
                 target="_blank"
                 rel="noreferrer"
                 className="text-slate-800 font-bold text-xs hover:text-emerald-600 flex items-center gap-1.5"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                +91 95107 59646
+                {settings.whatsappNumber || settings.phone}
               </a>
             </div>
           </div>
@@ -315,13 +317,13 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">Customer Care Hotline</h3>
             <p className="text-slate-500 text-xs mb-3">Immediate hotline for customer queries & support.</p>
             <a
-              href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT Support Hotline, I have an inquiry:")}
+              href={getWhatsAppUrl(settings.emergencyHotline || settings.phone, "Hello VRAT Support Hotline, I have an inquiry:")}
               target="_blank"
               rel="noreferrer"
               className="text-purple-600 font-bold text-sm hover:underline flex items-center gap-1.5"
             >
               <MessageSquare className="w-4 h-4 text-emerald-600" />
-              +91 95107 59646
+              {settings.emergencyHotline || settings.phone}
             </a>
             <div className="text-[11px] text-slate-400 mt-1">24×7 WhatsApp & Voice Hotline</div>
           </div>
@@ -334,12 +336,14 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">General Contact</h3>
             <p className="text-slate-500 text-xs mb-3">Management, partnerships, and executive contact.</p>
             <div className="space-y-1">
-              <a href="mailto:Nimesh.patel@vratsystem.co.in" className="text-amber-600 font-semibold text-xs hover:underline block truncate">
-                Nimesh.patel@vratsystem.co.in
+              <a href={`mailto:${settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}`} className="text-amber-600 font-semibold text-xs hover:underline block truncate">
+                {settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}
               </a>
-              <a href="mailto:Nimeshpatel.VSI@gmail.com" className="text-slate-600 font-medium text-xs hover:text-amber-600 hover:underline block truncate">
-                Nimeshpatel.VSI@gmail.com
-              </a>
+              {settings.secondaryEmail && (
+                <a href={`mailto:${settings.secondaryEmail}`} className="text-slate-600 font-medium text-xs hover:text-amber-600 hover:underline block truncate">
+                  {settings.secondaryEmail}
+                </a>
+              )}
             </div>
           </div>
         </div>

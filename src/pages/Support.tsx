@@ -370,12 +370,12 @@ export default function Support() {
                   <div>
                     <div className="text-slate-400">Customer Care Number (Click for WhatsApp)</div>
                     <a
-                      href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT Customer Care, I would like to inquire about support.")}
+                      href={getWhatsAppUrl(settings.phone || "+91 95107 59646", "Hello VRAT Customer Care, I would like to inquire about support.")}
                       target="_blank"
                       rel="noreferrer"
                       className="text-white font-bold hover:text-blue-300 transition text-sm flex items-center gap-1.5"
                     >
-                      +91 95107 59646
+                      {settings.phone || "+91 95107 59646"}
                     </a>
                   </div>
                 </div>
@@ -383,8 +383,8 @@ export default function Support() {
                   <PhoneCall className="w-4 h-4 text-emerald-400" />
                   <div>
                     <div className="text-slate-400">Customer Care Email</div>
-                    <a href="mailto:Service@vratsystem.co.in" className="text-emerald-400 font-bold hover:underline transition">
-                      Service@vratsystem.co.in
+                    <a href={`mailto:${settings.supportEmail || "Service@vratsystem.co.in"}`} className="text-emerald-400 font-bold hover:underline transition">
+                      {settings.supportEmail || "Service@vratsystem.co.in"}
                     </a>
                   </div>
                 </div>

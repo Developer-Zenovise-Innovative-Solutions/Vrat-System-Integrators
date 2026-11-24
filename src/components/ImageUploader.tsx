@@ -135,7 +135,9 @@ export default function ImageUploader({
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Image Asset Ready</span>
             </div>
-            <p className="text-[11px] text-slate-400 truncate max-w-xs">{value}</p>
+            <p className="text-[11px] text-slate-400 truncate max-w-xs">
+              {value.startsWith("data:") ? "Optimized Portrait Asset (Synced to Cloud)" : value}
+            </p>
             <div className="flex items-center gap-2 mt-2">
               <button
                 type="button"

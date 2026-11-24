@@ -280,6 +280,7 @@ export interface GlobalSettings {
   companyName: string;
   tagline: string;
   websiteUrl?: string;
+  logoUrl?: string;
   primaryEmail: string;
   secondaryEmail?: string;
   salesEmail: string;

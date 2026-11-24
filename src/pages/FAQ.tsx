@@ -34,12 +34,7 @@ export default function FAQ() {
 
   const categories = [
     "All",
-    "General",
-    "CCTV",
-    "Fire Alarm",
-    "Access Control",
-    "AMC & Support",
-    "Automation",
+    ...Array.from(new Set(faqs.map((f) => f.category).filter(Boolean))),
   ];
 
   const filteredFaqs = faqs.filter((f) => {

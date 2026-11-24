@@ -167,6 +167,7 @@ const mapSettingsFromDB = (row: any, prev: GlobalSettings): GlobalSettings => {
     companyName: row.company_name || prev.companyName,
     tagline: row.tagline || prev.tagline,
     websiteUrl: jsonConfig.website || prev.websiteUrl || "https://vratsystems.com/",
+    logoUrl: jsonConfig.logo_url || prev.logoUrl || "",
     primaryEmail: row.primary_email || prev.primaryEmail,
     secondaryEmail: jsonConfig.secondary_email || prev.secondaryEmail || "Nimeshpatel.VSI@gmail.com",
     salesEmail: row.sales_email || prev.salesEmail,
@@ -179,7 +180,9 @@ const mapSettingsFromDB = (row: any, prev: GlobalSettings): GlobalSettings => {
     cityStateZip: row.city_state_zip || prev.cityStateZip,
     headOfficeAddress: jsonConfig.head_office_address || prev.headOfficeAddress,
     branchOfficeAddress: jsonConfig.branch_office_address || prev.branchOfficeAddress,
-    locations: Array.isArray(jsonConfig.locations) && jsonConfig.locations.length > 0 ? jsonConfig.locations : (prev.locations || []),
+    locations: Array.isArray(jsonConfig.locations) && jsonConfig.locations.length > 0 
+      ? jsonConfig.locations 
+      : (prev.locations && prev.locations.length > 0 ? prev.locations : (INITIAL_SETTINGS.locations || [])),
     businessHours: row.business_hours || prev.businessHours,
     googleMapsUrl: row.google_maps_url || prev.googleMapsUrl,
     socialLinks: jsonConfig.social_profiles || {
@@ -210,6 +213,7 @@ const mapSettingsToDB = (s: GlobalSettings) => ({
   google_maps_url: s.googleMapsUrl,
   social_links: {
     website: s.websiteUrl || "https://vratsystems.com/",
+    logo_url: s.logoUrl || "",
     secondary_email: s.secondaryEmail,
     head_office_address: s.headOfficeAddress,
     branch_office_address: s.branchOfficeAddress,

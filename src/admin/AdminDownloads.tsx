@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { DownloadItem } from "../types";
+import FileUploader from "../components/FileUploader";
 import {
   FolderDown,
   Plus,
@@ -9,7 +10,9 @@ import {
   X,
   Save,
   Search,
-  Download
+  Download,
+  UploadCloud,
+  FileText
 } from "lucide-react";
 
 export default function AdminDownloads() {
@@ -70,6 +73,27 @@ export default function AdminDownloads() {
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" /> Add Document File
+        </button>
+      </div>
+
+      {/* Quick Document Dropbox Banner */}
+      <div className="bg-slate-950 p-4 sm:p-5 rounded-3xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
+            <UploadCloud className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white">Document Dropbox & File Uploader</div>
+            <div className="text-slate-400 text-xs">
+              Upload PDF catalogues, tender specifications, user manuals, and software utilities directly.
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleCreateNew}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 self-start md:self-auto shadow-md shadow-indigo-600/30"
+        >
+          <UploadCloud className="w-4 h-4" /> Open Dropbox & Upload File
         </button>
       </div>
 
@@ -192,6 +216,25 @@ export default function AdminDownloads() {
                   </select>
                 </div>
               </div>
+
+              {/* Upload Document / File Attachment (Requirement 10) */}
+              <FileUploader
+                value={editingDoc.downloadUrl && editingDoc.downloadUrl !== "#file" ? editingDoc.downloadUrl : ""}
+                fileName={editingDoc.title ? `${editingDoc.title}.${editingDoc.fileType.toLowerCase()}` : ""}
+                fileSize={editingDoc.fileSize}
+                fileType={editingDoc.fileType}
+                onUploadComplete={(info) => {
+                  setEditingDoc({
+                    ...editingDoc,
+                    downloadUrl: info.url,
+                    fileSize: info.fileSize,
+                    fileType: info.fileType,
+                    title: editingDoc.title || info.fileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+                  });
+                }}
+                label="Document File Attachment (Upload or Direct Link) *"
+                helperText="Upload official PDF brochure, catalogue, technical specification, or software"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Description</label>

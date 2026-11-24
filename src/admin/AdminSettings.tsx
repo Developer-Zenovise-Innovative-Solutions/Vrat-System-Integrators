@@ -3,6 +3,7 @@ import { useCMS } from "../context/CMSContext";
 import { useToast } from "../context/ToastContext";
 import { checkSupabaseConnection } from "../lib/supabase";
 import { BusinessLocation, LocationType } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Settings,
   Save,
@@ -291,6 +292,16 @@ export default function AdminSettings() {
                   placeholder="https://vratsystems.com/"
                 />
               </div>
+
+              <div className="sm:col-span-2">
+                <ImageUploader
+                  value={formData.logoUrl || ""}
+                  onChange={(url) => setFormData({ ...formData, logoUrl: url })}
+                  folder="branding"
+                  label="Website Official Brand Logo (Header & Footer)"
+                  helperText="Upload transparent PNG, SVG or WEBP company logo"
+                />
+              </div>
             </div>
           </div>
 
@@ -418,7 +429,7 @@ export default function AdminSettings() {
 
           {/* Locations Grid */}
           <div className="grid md:grid-cols-2 gap-5">
-            {(formData.locations || []).map((loc) => (
+            {((formData.locations && formData.locations.length > 0) ? formData.locations : (settings.locations || [])).map((loc) => (
               <div
                 key={loc.id}
                 className={`bg-slate-950 p-6 rounded-3xl border transition shadow-xl space-y-4 relative ${
