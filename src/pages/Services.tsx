@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { SERVICES, PROCESS_STEPS, FAQS } from "../data";
+import { useCMS } from "../context/CMSContext";
+import { PROCESS_STEPS, FAQS, SERVICES as DEFAULT_SERVICES } from "../data";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -34,43 +35,62 @@ const INDUSTRIES_SERVED = [
 ];
 
 export default function Services() {
+  const { services, heroConfigs, settings } = useCMS();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const hero = heroConfigs["services"] || {
+    heading: "Comprehensive Electronic Security & System Integration Solutions",
+    subtitle: "From surveillance and fire safety to networking and smart automation, VRAT System Integrators delivers end-to-end technology solutions designed to secure, connect, and optimize your business.",
+    backgroundImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=600&fit=crop&auto=format",
+    primaryCtaText: "Request a Free Consultation",
+    primaryCtaLink: "/contact",
+    secondaryCtaText: "Download Company Profile",
+    secondaryCtaLink: "/downloads",
+    showSection: true,
+  };
+
+  const activeServices = services && services.length > 0
+    ? services.filter((s) => s.status !== "Draft")
+    : DEFAULT_SERVICES;
 
   return (
     <div className="overflow-x-hidden">
       {/* HERO */}
-      <section className="relative py-32 gradient-navy overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=600&fit=crop&auto=format"
-            alt="Electronic security systems command center"
-            className="w-full h-full object-cover opacity-15"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 to-[#162B56]/80" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25 mb-6">
-              <span className="text-blue-300 text-sm font-medium">Services Overview</span>
-            </div>
-            <h1 className="font-serif text-5xl lg:text-6xl text-white leading-tight mb-6">
-              Comprehensive Electronic Security &{" "}
-              <span className="text-blue-300">System Integration Solutions</span>
-            </h1>
-            <p className="text-blue-100/80 text-xl leading-relaxed mb-8">
-              From surveillance and fire safety to networking and smart automation, VRAT System Integrators delivers end-to-end technology solutions designed to secure, connect, and optimize your business.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/contact" className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all">
-                Request a Free Consultation
-              </Link>
-              <Link to="/contact" className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all">
-                Download Company Profile
-              </Link>
+      {hero.showSection !== false && (
+        <section className="relative py-32 gradient-navy overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={hero.backgroundImage || "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=600&fit=crop&auto=format"}
+              alt="Electronic security systems command center"
+              className="w-full h-full object-cover opacity-15"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 to-[#162B56]/80" />
+          </div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl animate-fade-up">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25 mb-6">
+                <span className="text-blue-300 text-sm font-medium">Services Overview</span>
+              </div>
+              <h1 className="font-serif text-5xl lg:text-6xl text-white leading-tight mb-6">
+                {hero.heading}
+              </h1>
+              <p className="text-blue-100/80 text-xl leading-relaxed mb-8">
+                {hero.subtitle}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to={hero.primaryCtaLink || "/contact"} className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30">
+                  {hero.primaryCtaText || "Request a Free Consultation"}
+                </Link>
+                {hero.secondaryCtaText && (
+                  <Link to={hero.secondaryCtaLink || "/downloads"} className="px-7 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/25 transition-all">
+                    {hero.secondaryCtaText}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* INTRO */}
       <section className="py-20 bg-white">
@@ -95,7 +115,7 @@ export default function Services() {
           </AnimSection>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {SERVICES.map((service) => (
+            {activeServices.map((service) => (
               <AnimSection key={service.id}>
                 <div className="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm card-hover h-full flex flex-col">
                   <div className="relative h-52 overflow-hidden bg-blue-50">
@@ -110,39 +130,43 @@ export default function Services() {
                   </div>
                   <div className="p-7 flex flex-col flex-1">
                     <h3 className="font-bold text-slate-900 text-xl mb-3">{service.title}</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-1">{service.overview}</p>
+                    <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-1">{service.overview || service.shortDesc}</p>
 
                     {/* Features */}
-                    <div className="mb-5">
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">What We Offer</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {service.features.slice(0, 5).map((f) => (
-                          <span key={f} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-md">{f}</span>
-                        ))}
-                        {service.features.length > 5 && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-md">+{service.features.length - 5} more</span>
-                        )}
+                    {service.features && service.features.length > 0 && (
+                      <div className="mb-5">
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">What We Offer</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {service.features.slice(0, 5).map((f) => (
+                            <span key={f} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-md">{f}</span>
+                          ))}
+                          {service.features.length > 5 && (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-md">+{service.features.length - 5} more</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Benefits */}
-                    <div className="border-t border-slate-100 pt-4 mb-5">
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Key Benefits</p>
-                      <ul className="space-y-1">
-                        {service.benefits.slice(0, 3).map((b) => (
-                          <li key={b} className="flex items-center gap-2 text-xs text-slate-600">
-                            <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                            </svg>
-                            {b}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {service.benefits && service.benefits.length > 0 && (
+                      <div className="border-t border-slate-100 pt-4 mb-5">
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Key Benefits</p>
+                        <ul className="space-y-1">
+                          {service.benefits.slice(0, 3).map((b) => (
+                            <li key={b} className="flex items-center gap-2 text-xs text-slate-600">
+                              <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     <Link
-                      to={service.slug}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all"
+                      to={service.slug.startsWith("/") ? service.slug : `/services/${service.slug}`}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md shadow-blue-600/20"
                     >
                       Learn More
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { AdminUser, UserRole } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Shield,
   Users,
@@ -11,22 +12,22 @@ import {
   Save,
   CheckCircle2,
   KeyRound,
-  Lock
+  Lock,
+  Eye,
+  EyeOff,
+  Copy,
+  Sparkles
 } from "lucide-react";
 
 export default function AdminUsers() {
-  const { user } = useAuth();
-
-  const [users, setUsers] = useState<AdminUser[]>([
-    { id: "usr-1", name: "Rajesh Sharma", email: "admin@vratsystem.com", role: "Super Admin", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format", lastLogin: "Today, 09:30 AM", active: true },
-    { id: "usr-2", name: "Pooja Verma", email: "pooja.content@vratsystem.com", role: "Content Manager", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&auto=format", lastLogin: "Yesterday, 04:15 PM", active: true },
-    { id: "usr-3", name: "Vikram Malhotra", email: "vikram.sales@vratsystem.com", role: "Sales Manager", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&auto=format", lastLogin: "Aug 22, 11:20 AM", active: true },
-    { id: "usr-4", name: "Suresh Nair", email: "suresh.support@vratsystem.com", role: "Support Manager", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&auto=format", lastLogin: "Aug 21, 02:40 PM", active: true },
-    { id: "usr-5", name: "Ananya Sen", email: "ananya.hr@vratsystem.com", role: "HR Manager", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&auto=format", lastLogin: "Aug 20, 10:00 AM", active: true },
-  ]);
+  const { user, adminUsers, addAdminUser, updateAdminUser, deleteAdminUser } = useAuth();
 
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [notification, setNotification] = useState("");
 
   const rolesList: UserRole[] = [
     "Super Admin",
@@ -35,32 +36,68 @@ export default function AdminUsers() {
     "Sales Manager",
     "Support Manager",
     "HR Manager",
-    "Editor"
+    "Editor",
   ];
 
   const handleCreateNew = () => {
+    const generatedPass = "vrat@" + Math.floor(1000 + Math.random() * 9000);
     setEditingUser({
       id: "usr-" + Date.now(),
       name: "",
       email: "",
-      role: "Content Manager",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
+      role: "Super Admin",
+      avatar: "",
       lastLogin: "Never",
       active: true,
+      password: generatedPass,
     });
+    setPasswordInput(generatedPass);
+    setShowPassword(true);
     setIsNew(true);
+  };
+
+  const handleEdit = (u: AdminUser) => {
+    setEditingUser(u);
+    setPasswordInput(u.password || "admin123");
+    setShowPassword(false);
+    setIsNew(false);
+  };
+
+  const generateRandomPassword = () => {
+    const randomPass = "vrat#" + Math.random().toString(36).slice(-6);
+    setPasswordInput(randomPass);
+    if (editingUser) {
+      setEditingUser({ ...editingUser, password: randomPass });
+    }
+    setShowPassword(true);
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser || !editingUser.name || !editingUser.email) return;
 
+    const finalUser: AdminUser = {
+      ...editingUser,
+      password: passwordInput.trim() || "admin123",
+    };
+
     if (isNew) {
-      setUsers([...users, editingUser]);
+      addAdminUser(finalUser);
+      setNotification(`Admin user "${finalUser.name}" created successfully with login password!`);
     } else {
-      setUsers(users.map((u) => (u.id === editingUser.id ? editingUser : u)));
+      updateAdminUser(finalUser.id, finalUser);
+      setNotification(`User "${finalUser.name}" updated successfully!`);
     }
+
     setEditingUser(null);
+    setTimeout(() => setNotification(""), 3500);
+  };
+
+  const copyCredentials = (u: AdminUser) => {
+    const text = `Email: ${u.email}\nPassword: ${u.password || "admin123"}`;
+    navigator.clipboard.writeText(text);
+    setCopiedId(u.id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -72,16 +109,25 @@ export default function AdminUsers() {
             Access Control
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">System Users & Roles</h1>
-          <p className="text-slate-400 text-xs mt-1">Manage administrative accounts, role-based module permissions, and active sessions.</p>
+          <p className="text-slate-400 text-xs mt-1">
+            Manage administrative accounts, passwords for login authentication, and role-based permissions.
+          </p>
         </div>
 
         <button
           onClick={handleCreateNew}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-blue-600/30 flex items-center gap-1.5 self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" /> Add Admin User
         </button>
       </div>
+
+      {notification && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span>{notification}</span>
+        </div>
+      )}
 
       {/* Users Table */}
       <div className="bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
@@ -91,16 +137,34 @@ export default function AdminUsers() {
               <tr>
                 <th className="p-4">User</th>
                 <th className="p-4">Assigned Role</th>
+                <th className="p-4">Login Password</th>
                 <th className="p-4">Last Login</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-850">
-              {users.map((u) => (
+              {adminUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-900/50 transition">
                   <td className="p-4 flex items-center gap-3">
-                    <img src={u.avatar} alt={u.name} className="w-9 h-9 rounded-full object-cover border border-slate-800" />
+                    {u.avatar ? (
+                      <img
+                        src={u.avatar}
+                        alt={u.name}
+                        className="w-9 h-9 rounded-full object-cover border border-slate-800"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-blue-600/20 text-blue-400 font-bold flex items-center justify-center border border-blue-500/30 text-xs">
+                        {u.name
+                          ? u.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()
+                          : "U"}
+                      </div>
+                    )}
                     <div>
                       <div className="font-bold text-white text-sm">{u.name}</div>
                       <div className="text-slate-400 text-[11px]">{u.email}</div>
@@ -111,7 +175,26 @@ export default function AdminUsers() {
                       {u.role}
                     </span>
                   </td>
-                  <td className="p-4 text-slate-400 text-[11px]">{u.lastLogin}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-slate-300 bg-slate-900 px-2 py-1 rounded-md border border-slate-800 text-[11px]">
+                        {u.password || "admin123"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyCredentials(u)}
+                        title="Copy login details"
+                        className="p-1 hover:text-white text-slate-400 rounded transition"
+                      >
+                        {copiedId === u.id ? (
+                          <span className="text-[10px] text-emerald-400 font-bold">Copied!</span>
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="p-4 text-slate-400 text-[11px]">{u.lastLogin || "Never"}</td>
                   <td className="p-4">
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
                       Active
@@ -119,19 +202,21 @@ export default function AdminUsers() {
                   </td>
                   <td className="p-4 text-right space-x-2">
                     <button
-                      onClick={() => { setEditingUser(u); setIsNew(false); }}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                      onClick={() => handleEdit(u)}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+                      title="Edit User & Password"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    {u.id !== "usr-1" && (
+                    {u.id !== "usr-superadmin" && u.id !== user?.id && (
                       <button
                         onClick={() => {
-                          if (confirm(`Remove user "${u.name}"?`)) {
-                            setUsers(users.filter((item) => item.id !== u.id));
+                          if (confirm(`Permanently remove admin account for "${u.name}"? This deletion will persist in the database.`)) {
+                            deleteAdminUser(u.id);
                           }
                         }}
                         className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white transition"
+                        title="Delete User"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -144,18 +229,28 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Add / Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 rounded-3xl max-w-md w-full border border-slate-800 shadow-2xl p-6 sm:p-8 animate-fade-in text-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h2 className="text-lg font-bold text-white">{isNew ? "Add Admin User" : "Edit User Details"}</h2>
-              <button onClick={() => setEditingUser(null)} className="p-1 text-slate-400 hover:text-white">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <h2 className="text-lg font-bold text-white">
+                  {isNew ? "Add Admin User & Password" : "Edit User & Password"}
+                </h2>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3.5">
+            <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Full Name *</label>
                 <input
@@ -163,19 +258,58 @@ export default function AdminUsers() {
                   required
                   value={editingUser.name}
                   onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  placeholder="e.g. Nimesh Patel"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Email Address *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Email Address (Login Username) *</label>
                 <input
                   type="email"
                   required
                   value={editingUser.email}
                   onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  placeholder="e.g. nimesh.patel@vratsystem.co.in"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-300 font-semibold flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-blue-400" />
+                    Admin Login Password *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={generateRandomPassword}
+                    className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium"
+                  >
+                    <Sparkles className="w-3 h-3" /> Generate Random
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    placeholder="Enter login password..."
+                    className="w-full pl-3 pr-10 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  This user can log in at <span className="text-blue-300 font-mono">/admin/login</span> using this email and password.
+                </p>
               </div>
 
               <div>
@@ -183,7 +317,7 @@ export default function AdminUsers() {
                 <select
                   value={editingUser.role}
                   onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as any })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {rolesList.map((r) => (
                     <option key={r} value={r}>{r}</option>
@@ -191,29 +325,27 @@ export default function AdminUsers() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Avatar Image URL</label>
-                <input
-                  type="url"
-                  value={editingUser.avatar}
-                  onChange={(e) => setEditingUser({ ...editingUser, avatar: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
-                />
-              </div>
+              <ImageUploader
+                value={editingUser.avatar || ""}
+                onChange={(url) => setEditingUser({ ...editingUser, avatar: url })}
+                folder="avatars"
+                label="Administrator Profile Photo (Optional)"
+                helperText="Upload JPG or PNG portrait"
+              />
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 font-semibold rounded-xl"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30 flex items-center gap-1.5"
                 >
-                  Save User
+                  <Save className="w-4 h-4" /> Save User & Access
                 </button>
               </div>
             </form>

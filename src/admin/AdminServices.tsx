@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { ServiceItem } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Layers,
   Plus,
@@ -204,15 +205,13 @@ export default function AdminServices() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={editingService.image}
-                  onChange={(e) => setEditingService({ ...editingService, image: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <ImageUploader
+                value={editingService.image}
+                onChange={(url) => setEditingService({ ...editingService, image: url })}
+                folder="services"
+                label="Cover Image Asset (Dropbox / File Upload)"
+                helperText="Upload JPG, PNG or WEBP for this service"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Key Features (Comma-separated)</label>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { MediaItem } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Image as ImageIcon,
   Upload,
@@ -176,17 +177,20 @@ export default function AdminMedia() {
             </div>
 
             <form onSubmit={handleUploadSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Image / Asset URL *</label>
-                <input
-                  type="url"
-                  required
-                  value={newMedia.url}
-                  onChange={(e) => setNewMedia({ ...newMedia, url: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
-                  placeholder="https://images.unsplash.com/..."
-                />
-              </div>
+              <ImageUploader
+                value={newMedia.url}
+                onChange={(url) => {
+                  const autoName = url.split("/").pop()?.split("?")[0] || "media-asset.jpg";
+                  setNewMedia({
+                    ...newMedia,
+                    url,
+                    filename: newMedia.filename || autoName,
+                  });
+                }}
+                folder="media-library"
+                label="Cloud Media Asset"
+                helperText="Upload image asset (JPG, PNG, WEBP, SVG) to Supabase Storage"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Filename *</label>

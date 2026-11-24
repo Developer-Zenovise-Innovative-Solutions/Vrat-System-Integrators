@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCMS } from "../context/CMSContext";
+import { useToast } from "../context/ToastContext";
+import ImageUploader from "../components/ImageUploader";
 import {
   Sliders,
   Save,
@@ -10,14 +12,19 @@ import {
   Layers,
   ArrowRight,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 
 export default function AdminPagesBuilder() {
   const { heroConfigs, updateHeroConfig, addLog } = useCMS();
+  const toast = useToast();
 
   const [selectedPageId, setSelectedPageId] = useState("home");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const activeConfig = heroConfigs[selectedPageId] || {
     pageId: selectedPageId,
@@ -35,8 +42,16 @@ export default function AdminPagesBuilder() {
 
   const [formData, setFormData] = useState(activeConfig);
 
+  useEffect(() => {
+    if (heroConfigs[selectedPageId]) {
+      setFormData(heroConfigs[selectedPageId]);
+    }
+  }, [heroConfigs, selectedPageId]);
+
   const handleSelectPage = (pageId: string) => {
     setSelectedPageId(pageId);
+    setSaveSuccess(false);
+    setErrorMessage("");
     setFormData(
       heroConfigs[pageId] || {
         pageId: pageId,
@@ -54,16 +69,33 @@ export default function AdminPagesBuilder() {
     );
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateHeroConfig(selectedPageId, formData);
-    addLog(
-      "Updated Page Hero",
-      "Page Builder",
-      `Saved changes to page "${formData.pageName}" (Hero Heading: ${formData.heading.slice(0, 30)}...)`
-    );
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    setIsSaving(true);
+    setErrorMessage("");
+    setSaveSuccess(false);
+
+    try {
+      await updateHeroConfig(selectedPageId, formData);
+      addLog(
+        "Updated Page Hero",
+        "Page Builder",
+        `Saved changes to page "${formData.pageName}" (Hero Heading: ${formData.heading.slice(0, 30)}...)`
+      );
+
+      setSaveSuccess(true);
+      toast.success(
+        "Changes Saved & Published!",
+        `Hero banner for "${formData.pageName}" is now live and synced across all devices.`
+      );
+      setTimeout(() => setSaveSuccess(false), 4000);
+    } catch (err: any) {
+      const msg = err?.message || "Failed to update page hero. Please check your network connection.";
+      setErrorMessage(msg);
+      toast.error("Save Failed", msg);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const pageList = [
@@ -203,25 +235,15 @@ export default function AdminPagesBuilder() {
                 />
               </div>
 
-              {/* Background Image */}
+              {/* Background Image Upload System (Supabase Storage - Requirement 16) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Hero Background Image URL
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={formData.backgroundImage}
-                    onChange={(e) => setFormData({ ...formData, backgroundImage: e.target.value })}
-                    className="flex-1 px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://images.unsplash.com/..."
-                  />
-                </div>
-                {formData.backgroundImage && (
-                  <div className="mt-2 rounded-xl overflow-hidden h-28 bg-slate-900 border border-slate-800">
-                    <img src={formData.backgroundImage} alt="Preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <ImageUploader
+                  value={formData.backgroundImage}
+                  onChange={(url) => setFormData({ ...formData, backgroundImage: url })}
+                  folder="heroes"
+                  label="Hero Background Image Asset"
+                  helperText="Upload HD banner image (JPG, PNG, WEBP) to cloud storage"
+                />
               </div>
 
               {/* CTA Buttons */}
@@ -275,13 +297,43 @@ export default function AdminPagesBuilder() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+              {/* Action Buttons & Status */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-800">
+                <div className="flex items-center gap-2">
+                  {saveSuccess && (
+                    <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold animate-fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      Saved & published live to all devices!
+                    </div>
+                  )}
+                  {errorMessage && (
+                    <div className="inline-flex items-center gap-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 px-3 py-1.5 rounded-xl text-xs font-semibold animate-fade-in">
+                      <AlertCircle className="w-4 h-4 text-rose-400" />
+                      {errorMessage}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-blue-600/30 flex items-center gap-2"
+                  disabled={isSaving}
+                  className={`px-6 py-3 font-bold rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2 ${
+                    isSaving
+                      ? "bg-blue-700 text-blue-200 cursor-not-allowed opacity-80"
+                      : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30 active:scale-[0.98]"
+                  }`}
                 >
-                  <Save className="w-4 h-4" /> Save & Publish to Live Website
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving & Publishing to Live Website...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save & Publish to Live Website
+                    </>
+                  )}
                 </button>
               </div>
             </form>

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { ProductItem } from "../types";
+import ImageUploader from "../components/ImageUploader";
+import FileUploader from "../components/FileUploader";
 import {
   ShoppingBag,
   Plus,
@@ -242,15 +244,13 @@ export default function AdminProducts() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Image URL</label>
-                <input
-                  type="url"
-                  value={editingProduct.image}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <ImageUploader
+                value={editingProduct.image}
+                onChange={(url) => setEditingProduct({ ...editingProduct, image: url })}
+                folder="products"
+                label="Product Image Asset"
+                helperText="Upload product photo (JPG, PNG, WEBP) to cloud storage"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Features (Comma-separated)</label>
@@ -267,16 +267,18 @@ export default function AdminProducts() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Datasheet Download Link</label>
-                <input
-                  type="text"
-                  value={editingProduct.datasheetUrl || ""}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, datasheetUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
-                  placeholder="/downloads/datasheets/sample.pdf"
-                />
-              </div>
+              <FileUploader
+                value={editingProduct.datasheetUrl || ""}
+                fileName={editingProduct.name ? `${editingProduct.name}-datasheet.pdf` : ""}
+                onUploadComplete={(info) => {
+                  setEditingProduct({
+                    ...editingProduct,
+                    datasheetUrl: info.url,
+                  });
+                }}
+                label="Product Technical Datasheet (PDF / Spec Sheet)"
+                helperText="Upload official manufacturer datasheet PDF for this model"
+              />
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button

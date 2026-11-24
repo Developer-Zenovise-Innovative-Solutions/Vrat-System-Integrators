@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { BlogPost } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   BookOpen,
   Plus,
@@ -30,7 +31,7 @@ export default function AdminBlog() {
       slug: "new-article-title",
       title: "",
       category: "AI Surveillance",
-      author: "Rajesh Sharma",
+      author: "Nimesh Patel",
       authorRole: "Managing Director",
       authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&auto=format",
       publishDate: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
@@ -203,15 +204,13 @@ export default function AdminBlog() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Featured Image URL</label>
-                <input
-                  type="url"
-                  value={editingBlog.featuredImage}
-                  onChange={(e) => setEditingBlog({ ...editingBlog, featuredImage: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
-                />
-              </div>
+              <ImageUploader
+                value={editingBlog.featuredImage}
+                onChange={(url) => setEditingBlog({ ...editingBlog, featuredImage: url })}
+                folder="blog"
+                label="Featured Article Cover Image"
+                helperText="Upload blog header image (JPG, PNG, WEBP) to cloud storage"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Article Body Content (Markdown / Text)</label>

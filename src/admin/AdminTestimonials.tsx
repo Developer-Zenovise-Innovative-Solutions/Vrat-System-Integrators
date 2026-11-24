@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { TestimonialItem } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Star,
   Plus,
@@ -186,6 +187,14 @@ export default function AdminTestimonials() {
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
                 />
               </div>
+
+              <ImageUploader
+                value={editingItem.avatar || ""}
+                onChange={(url) => setEditingItem({ ...editingItem, avatar: url })}
+                folder="avatars"
+                label="Client Profile Avatar (Optional)"
+                helperText="Upload square client portrait or company logo"
+              />
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button

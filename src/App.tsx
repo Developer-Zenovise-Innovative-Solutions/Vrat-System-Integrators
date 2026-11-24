@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CMSProvider } from "./context/CMSContext";
+import { ToastProvider } from "./context/ToastContext";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -113,45 +114,47 @@ export default function App() {
   return (
     <AuthProvider>
       <CMSProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            {/* Admin Login */}
-            <Route path="/admin/login" element={<AdminLogin />} />
+        <ToastProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              {/* Admin Login */}
+              <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Protected Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedAdminRoute>
-                  <AdminLayout />
-                </ProtectedAdminRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="pages" element={<AdminPagesBuilder />} />
-              <Route path="services" element={<AdminServices />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="solutions" element={<AdminSolutions />} />
-              <Route path="projects" element={<AdminProjects />} />
-              <Route path="blog" element={<AdminBlog />} />
-              <Route path="faqs" element={<AdminFAQs />} />
-              <Route path="testimonials" element={<AdminTestimonials />} />
-              <Route path="partners" element={<AdminPartners />} />
-              <Route path="downloads" element={<AdminDownloads />} />
-              <Route path="leads" element={<AdminLeads />} />
-              <Route path="careers" element={<AdminCareers />} />
-              <Route path="media" element={<AdminMedia />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="seo" element={<AdminSEO />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="logs" element={<AdminLogs />} />
-            </Route>
+              {/* Protected Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminLayout />
+                  </ProtectedAdminRoute>
+                }
+              >
+                <Route index element={<AdminDashboard />} />
+                <Route path="pages" element={<AdminPagesBuilder />} />
+                <Route path="services" element={<AdminServices />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="solutions" element={<AdminSolutions />} />
+                <Route path="projects" element={<AdminProjects />} />
+                <Route path="blog" element={<AdminBlog />} />
+                <Route path="faqs" element={<AdminFAQs />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="partners" element={<AdminPartners />} />
+                <Route path="downloads" element={<AdminDownloads />} />
+                <Route path="leads" element={<AdminLeads />} />
+                <Route path="careers" element={<AdminCareers />} />
+                <Route path="media" element={<AdminMedia />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="seo" element={<AdminSEO />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="logs" element={<AdminLogs />} />
+              </Route>
 
-            {/* Public Layout */}
-            <Route path="/*" element={<PublicLayout />} />
-          </Routes>
-        </BrowserRouter>
+              {/* Public Layout */}
+              <Route path="/*" element={<PublicLayout />} />
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
       </CMSProvider>
     </AuthProvider>
   );

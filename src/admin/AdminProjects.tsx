@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { CaseStudy } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Briefcase,
   Plus,
@@ -202,15 +203,13 @@ export default function AdminProjects() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={editingCase.image}
-                  onChange={(e) => setEditingCase({ ...editingCase, image: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"
-                />
-              </div>
+              <ImageUploader
+                value={editingCase.image}
+                onChange={(url) => setEditingCase({ ...editingCase, image: url })}
+                folder="projects"
+                label="Case Study Cover Image (Dropbox / File Upload)"
+                helperText="Upload JPG, PNG or WEBP high-resolution photo"
+              />
 
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Operational Challenge Faced by Client</label>

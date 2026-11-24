@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { DownloadItem } from "../types";
+import { sendEmailNotification } from "../lib/emailService";
+import { getWhatsAppUrl } from "../lib/whatsapp";
 import {
   Download,
   Search,
@@ -58,35 +60,72 @@ export default function Downloads() {
     incrementDownloadCount(doc.id);
     setDownloadSuccess(doc.title);
     setTimeout(() => setDownloadSuccess(null), 3000);
+
+    if (doc.downloadUrl && doc.downloadUrl !== "#file") {
+      const a = document.createElement("a");
+      a.href = doc.downloadUrl;
+      a.download = `${doc.title}.${doc.fileType.toLowerCase()}`;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
-  const handleReqSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleReqSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reqForm.name || !reqForm.email) return;
 
-    submitLead({
-      type: "Contact Inquiry",
-      name: reqForm.name,
-      company: reqForm.company,
-      email: reqForm.email,
-      phone: reqForm.phone,
-      serviceOrProduct: reqForm.category,
-      message: `Document Request for "${reqForm.documentName}". Notes: ${reqForm.notes}`,
-    });
+    setSubmitting(true);
+    setErrorMessage("");
 
-    setReqSubmitted(true);
-    setTimeout(() => {
-      setReqSubmitted(false);
-      setReqForm({
-        name: "",
-        company: "",
-        email: "",
-        phone: "",
-        documentName: "",
-        category: "CCTV",
-        notes: "",
+    try {
+      submitLead({
+        type: "Contact Inquiry",
+        name: reqForm.name,
+        company: reqForm.company,
+        email: reqForm.email,
+        phone: reqForm.phone,
+        serviceOrProduct: `Document Request: ${reqForm.documentName || reqForm.category}`,
+        message: `Document Request for "${reqForm.documentName}". Category: ${reqForm.category}. Notes: ${reqForm.notes}`,
       });
-    }, 2500);
+
+      await sendEmailNotification({
+        formType: "Technical Document / Catalogue Request",
+        name: reqForm.name,
+        email: reqForm.email,
+        phone: reqForm.phone,
+        company: reqForm.company,
+        subject: `[Document Request] ${reqForm.documentName || reqForm.category} - ${reqForm.name}`,
+        message: reqForm.notes,
+        details: {
+          "Requested Document Name": reqForm.documentName || "General Category Request",
+          "Document Category": reqForm.category,
+          "Company / Organization": reqForm.company || "Not specified",
+        },
+      });
+
+      setReqSubmitted(true);
+      setTimeout(() => {
+        setReqSubmitted(false);
+        setReqForm({
+          name: "",
+          company: "",
+          email: "",
+          phone: "",
+          documentName: "",
+          category: "CCTV",
+          notes: "",
+        });
+      }, 3500);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to submit document request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -342,11 +381,18 @@ export default function Downloads() {
                     />
                   </div>
 
+                  {errorMessage && (
+                    <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                      {errorMessage}
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                    disabled={submitting}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
                   >
-                    <Send className="w-3.5 h-3.5" /> Submit Request
+                    <Send className="w-3.5 h-3.5" /> {submitting ? "Submitting Request..." : "Submit Request"}
                   </button>
                 </form>
               )}

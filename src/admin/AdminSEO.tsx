@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
+import { useToast } from "../context/ToastContext";
 import { SEOMetadata } from "../types";
+import ImageUploader from "../components/ImageUploader";
 import {
   Search,
   Save,
@@ -13,15 +15,17 @@ import {
 
 export default function AdminSEO() {
   const { seoMetadata, updateSEOMetadata, addLog } = useCMS();
+  const toast = useToast();
   const [selectedPage, setSelectedPage] = useState("home");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const defaultSEO: SEOMetadata = {
     pageId: selectedPage,
     pagePath: selectedPage === "home" ? "/" : `/${selectedPage}`,
     metaTitle: "VRAT System Integrators | Electronic Security & Automation Solutions",
     metaDescription: "VRAT System Integrators provides CCTV surveillance, fire alarm systems, access control, networking, home automation, and integrated electronic security solutions across India.",
-    canonicalUrl: `https://vratsystem.com${selectedPage === "home" ? "" : `/${selectedPage}`}`,
+    canonicalUrl: `https://vratsystems.com${selectedPage === "home" ? "" : `/${selectedPage}`}`,
     ogImage: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=1200&h=630&fit=crop&auto=format",
     keywords: ["CCTV", "Security System", "Fire Alarm", "Access Control", "Networking", "System Integrators"],
     indexPage: true,
@@ -52,17 +56,25 @@ export default function AdminSEO() {
         ...defaultSEO,
         pageId: id,
         pagePath: id === "home" ? "/" : `/${id}`,
-        canonicalUrl: `https://vratsystem.com${id === "home" ? "" : `/${id}`}`,
+        canonicalUrl: `https://vratsystems.com${id === "home" ? "" : `/${id}`}`,
       }
     );
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSEOMetadata(selectedPage, formData);
-    addLog("Updated SEO", "SEO", `Saved meta tags and OpenGraph configuration for page: ${selectedPage}`);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    setIsSaving(true);
+    try {
+      updateSEOMetadata(selectedPage, formData);
+      addLog("Updated SEO", "SEO", `Saved meta tags and OpenGraph configuration for page: ${selectedPage}`);
+      setSaveSuccess(true);
+      toast.success("SEO Metadata Saved!", `SEO tags for "${selectedPage}" updated successfully.`);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err: any) {
+      toast.error("Save Failed", err?.message || "Could not save SEO metadata.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -135,15 +147,13 @@ export default function AdminSEO() {
               <div className="text-[10px] text-slate-500 mt-1">{formData.metaDescription.length} / 160 recommended characters</div>
             </div>
 
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1">Social OpenGraph Image URL (1200x630)</label>
-              <input
-                type="url"
-                value={formData.ogImage}
-                onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white"
-              />
-            </div>
+            <ImageUploader
+              value={formData.ogImage}
+              onChange={(url) => setFormData({ ...formData, ogImage: url })}
+              folder="seo"
+              label="Social OpenGraph Sharing Image (1200x630)"
+              helperText="Upload JPG, PNG or WEBP social preview banner"
+            />
 
             <div>
               <label className="block text-slate-300 font-semibold mb-1">SEO Keywords (Comma-separated)</label>
