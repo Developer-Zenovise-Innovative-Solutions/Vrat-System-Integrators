@@ -17,6 +17,16 @@ import {
   SEOMetadata,
   GlobalSettings,
   ActivityLog,
+  HomePageData,
+  AboutPageData,
+  ServicesPageData,
+  FooterData,
+  SolutionsPageData,
+  ProductsPageData,
+  ProjectsPageData,
+  GalleryPageData,
+  BlogPageData,
+  ContactPageData,
 } from "../types";
 import {
   INITIAL_SETTINGS,
@@ -33,6 +43,16 @@ import {
   INITIAL_PARTNERS,
   INITIAL_HERO_CONFIGS,
   INITIAL_MEDIA_ITEMS,
+  INITIAL_HOME_PAGE_DATA,
+  INITIAL_ABOUT_PAGE_DATA,
+  INITIAL_SERVICES_PAGE_DATA,
+  INITIAL_FOOTER_DATA,
+  INITIAL_SOLUTIONS_PAGE_DATA,
+  INITIAL_PRODUCTS_PAGE_DATA,
+  INITIAL_PROJECTS_PAGE_DATA,
+  INITIAL_GALLERY_PAGE_DATA,
+  INITIAL_BLOG_PAGE_DATA,
+  INITIAL_CONTACT_PAGE_DATA,
 } from "../data/initialData";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
@@ -107,6 +127,36 @@ interface CMSContextType {
 
   heroConfigs: Record<string, PageHeroConfig>;
   updateHeroConfig: (pageId: string, config: Partial<PageHeroConfig>) => void;
+
+  homePageData: HomePageData;
+  updateHomePageData: (data: Partial<HomePageData>) => Promise<void>;
+
+  aboutPageData: AboutPageData;
+  updateAboutPageData: (data: Partial<AboutPageData>) => Promise<void>;
+
+  servicesPageData: ServicesPageData;
+  updateServicesPageData: (data: Partial<ServicesPageData>) => Promise<void>;
+
+  footerData: FooterData;
+  updateFooterData: (data: Partial<FooterData>) => Promise<void>;
+
+  solutionsPageData: SolutionsPageData;
+  updateSolutionsPageData: (data: Partial<SolutionsPageData>) => Promise<void>;
+
+  productsPageData: ProductsPageData;
+  updateProductsPageData: (data: Partial<ProductsPageData>) => Promise<void>;
+
+  projectsPageData: ProjectsPageData;
+  updateProjectsPageData: (data: Partial<ProjectsPageData>) => Promise<void>;
+
+  galleryPageData: GalleryPageData;
+  updateGalleryPageData: (data: Partial<GalleryPageData>) => Promise<void>;
+
+  blogPageData: BlogPageData;
+  updateBlogPageData: (data: Partial<BlogPageData>) => Promise<void>;
+
+  contactPageData: ContactPageData;
+  updateContactPageData: (data: Partial<ContactPageData>) => Promise<void>;
 
   seoMetadata: Record<string, SEOMetadata>;
   updateSEOMetadata: (pageId: string, seo: Partial<SEOMetadata>) => void;
@@ -622,6 +672,16 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   const [partners, setPartners] = useState<PartnerBrand[]>(() => loadFromStorage("partners", INITIAL_PARTNERS));
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(() => loadFromStorage("media", INITIAL_MEDIA_ITEMS));
   const [heroConfigs, setHeroConfigs] = useState<Record<string, PageHeroConfig>>(() => loadFromStorage("heroes", INITIAL_HERO_CONFIGS));
+  const [homePageData, setHomePageData] = useState<HomePageData>(() => loadFromStorage("home_page_data", INITIAL_HOME_PAGE_DATA));
+  const [aboutPageData, setAboutPageData] = useState<AboutPageData>(() => loadFromStorage("about_page_data", INITIAL_ABOUT_PAGE_DATA));
+  const [servicesPageData, setServicesPageData] = useState<ServicesPageData>(() => loadFromStorage("services_page_data", INITIAL_SERVICES_PAGE_DATA));
+  const [footerData, setFooterData] = useState<FooterData>(() => loadFromStorage("footer_data", INITIAL_FOOTER_DATA));
+  const [solutionsPageData, setSolutionsPageData] = useState<SolutionsPageData>(() => loadFromStorage("solutions_page_data", INITIAL_SOLUTIONS_PAGE_DATA));
+  const [productsPageData, setProductsPageData] = useState<ProductsPageData>(() => loadFromStorage("products_page_data", INITIAL_PRODUCTS_PAGE_DATA));
+  const [projectsPageData, setProjectsPageData] = useState<ProjectsPageData>(() => loadFromStorage("projects_page_data", INITIAL_PROJECTS_PAGE_DATA));
+  const [galleryPageData, setGalleryPageData] = useState<GalleryPageData>(() => loadFromStorage("gallery_page_data", INITIAL_GALLERY_PAGE_DATA));
+  const [blogPageData, setBlogPageData] = useState<BlogPageData>(() => loadFromStorage("blog_page_data", INITIAL_BLOG_PAGE_DATA));
+  const [contactPageData, setContactPageData] = useState<ContactPageData>(() => loadFromStorage("contact_page_data", INITIAL_CONTACT_PAGE_DATA));
   const [seoMetadata, setSeoMetadata] = useState<Record<string, SEOMetadata>>(() => loadFromStorage("seo", {}));
   const [logs, setLogs] = useState<ActivityLog[]>(() => loadFromStorage("logs", [
     { id: "log-1", user: "Nimesh Patel", role: "Super Admin", action: "System Initialized", module: "System", details: "All 29 website content modules and CMS tables initialized.", timestamp: "2026-08-24 09:00", read: true }
@@ -643,6 +703,16 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { localStorage.setItem("vrat_cms_partners", JSON.stringify(partners)); }, [partners]);
   useEffect(() => { localStorage.setItem("vrat_cms_media", JSON.stringify(mediaItems)); }, [mediaItems]);
   useEffect(() => { localStorage.setItem("vrat_cms_heroes", JSON.stringify(heroConfigs)); }, [heroConfigs]);
+  useEffect(() => { localStorage.setItem("vrat_cms_home_page_data", JSON.stringify(homePageData)); }, [homePageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_about_page_data", JSON.stringify(aboutPageData)); }, [aboutPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_services_page_data", JSON.stringify(servicesPageData)); }, [servicesPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_footer_data", JSON.stringify(footerData)); }, [footerData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_solutions_page_data", JSON.stringify(solutionsPageData)); }, [solutionsPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_products_page_data", JSON.stringify(productsPageData)); }, [productsPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_projects_page_data", JSON.stringify(projectsPageData)); }, [projectsPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_gallery_page_data", JSON.stringify(galleryPageData)); }, [galleryPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_blog_page_data", JSON.stringify(blogPageData)); }, [blogPageData]);
+  useEffect(() => { localStorage.setItem("vrat_cms_contact_page_data", JSON.stringify(contactPageData)); }, [contactPageData]);
   useEffect(() => { localStorage.setItem("vrat_cms_seo", JSON.stringify(seoMetadata)); }, [seoMetadata]);
   useEffect(() => { localStorage.setItem("vrat_cms_logs", JSON.stringify(logs)); }, [logs]);
 
@@ -666,6 +736,82 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       const { data: dbSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
       if (dbSettings) {
         setSettings((prev) => mapSettingsFromDB(dbSettings, prev));
+        const jsonCfg = (typeof dbSettings.social_links === "object" && dbSettings.social_links) || {};
+        if (jsonCfg.home_page_data) {
+          setHomePageData((prev) => ({
+            ...prev,
+            ...jsonCfg.home_page_data,
+            sectionOrder: jsonCfg.home_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.home_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.about_page_data) {
+          setAboutPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.about_page_data,
+            sectionOrder: jsonCfg.about_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.about_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.services_page_data) {
+          setServicesPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.services_page_data,
+            sectionOrder: jsonCfg.services_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.services_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.footer_data) {
+          setFooterData((prev) => ({ ...prev, ...jsonCfg.footer_data }));
+        }
+        if (jsonCfg.solutions_page_data) {
+          setSolutionsPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.solutions_page_data,
+            sectionOrder: jsonCfg.solutions_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.solutions_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.products_page_data) {
+          setProductsPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.products_page_data,
+            sectionOrder: jsonCfg.products_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.products_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.projects_page_data) {
+          setProjectsPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.projects_page_data,
+            sectionOrder: jsonCfg.projects_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.projects_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.gallery_page_data) {
+          setGalleryPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.gallery_page_data,
+            sectionOrder: jsonCfg.gallery_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.gallery_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.blog_page_data) {
+          setBlogPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.blog_page_data,
+            sectionOrder: jsonCfg.blog_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.blog_page_data.sectionVisibility },
+          }));
+        }
+        if (jsonCfg.contact_page_data) {
+          setContactPageData((prev) => ({
+            ...prev,
+            ...jsonCfg.contact_page_data,
+            sectionOrder: jsonCfg.contact_page_data.sectionOrder || prev.sectionOrder,
+            sectionVisibility: { ...prev.sectionVisibility, ...jsonCfg.contact_page_data.sectionVisibility },
+          }));
+        }
       }
 
       // 3. Services
@@ -1461,6 +1607,314 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // 14b. Dynamic Home Page Full Content & Reordering Manager (Cross-Device Cloud Sync)
+  const updateHomePageData = async (data: Partial<HomePageData>) => {
+    const mergedData: HomePageData = {
+      ...homePageData,
+      ...data,
+      sectionOrder: data.sectionOrder || homePageData.sectionOrder,
+      sectionVisibility: { ...homePageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+
+    setHomePageData(mergedData);
+    localStorage.setItem("vrat_cms_home_page_data", JSON.stringify(mergedData));
+    addLog("Updated Home Page Layout", "Page Builder", "Saved custom section order, visibility, and content for Home Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase
+          .from("settings")
+          .select("*")
+          .eq("id", "global_config")
+          .maybeSingle();
+
+        const currentSocial =
+          (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        const updatedSocial = {
+          ...currentSocial,
+          home_page_data: mergedData,
+        };
+
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist homePageData to Supabase settings:", err);
+      }
+    }
+  };
+
+  // 14c. Dynamic About Us Page Full Content & Reordering Manager (Cross-Device Cloud Sync)
+  const updateAboutPageData = async (data: Partial<AboutPageData>) => {
+    const mergedData: AboutPageData = {
+      ...aboutPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || aboutPageData.sectionOrder,
+      sectionVisibility: { ...aboutPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+
+    setAboutPageData(mergedData);
+    localStorage.setItem("vrat_cms_about_page_data", JSON.stringify(mergedData));
+    addLog("Updated About Us Page Layout", "Page Builder", "Saved custom section order, visibility, and content for About Us Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase
+          .from("settings")
+          .select("*")
+          .eq("id", "global_config")
+          .maybeSingle();
+
+        const currentSocial =
+          (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        const updatedSocial = {
+          ...currentSocial,
+          about_page_data: mergedData,
+        };
+
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist aboutPageData to Supabase settings:", err);
+      }
+    }
+  };
+
+  // 14d. Dynamic Services Page Full Content & Reordering Manager (Cross-Device Cloud Sync)
+  const updateServicesPageData = async (data: Partial<ServicesPageData>) => {
+    const mergedData: ServicesPageData = {
+      ...servicesPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || servicesPageData.sectionOrder,
+      sectionVisibility: { ...servicesPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+
+    setServicesPageData(mergedData);
+    localStorage.setItem("vrat_cms_services_page_data", JSON.stringify(mergedData));
+    addLog("Updated Services Page Layout", "Page Builder", "Saved custom section order, visibility, and content for Services Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase
+          .from("settings")
+          .select("*")
+          .eq("id", "global_config")
+          .maybeSingle();
+
+        const currentSocial =
+          (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        const updatedSocial = {
+          ...currentSocial,
+          services_page_data: mergedData,
+        };
+
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist servicesPageData to Supabase settings:", err);
+      }
+    }
+  };
+
+  // 14e. Footer Content Manager
+  const updateFooterData = async (data: Partial<FooterData>) => {
+    const mergedData: FooterData = {
+      ...footerData,
+      ...data,
+      preFooter: { ...footerData.preFooter, ...(data.preFooter || {}) },
+      company: { ...footerData.company, ...(data.company || {}) },
+      newsletter: { ...footerData.newsletter, ...(data.newsletter || {}) },
+      bottomBar: { ...footerData.bottomBar, ...(data.bottomBar || {}) },
+    };
+    setFooterData(mergedData);
+    localStorage.setItem("vrat_cms_footer_data", JSON.stringify(mergedData));
+    addLog("Updated Website Footer", "Page Builder", "Saved custom footer pre-banner, narrative, and copyright settings");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, footer_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist footerData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14f. Solutions Page Manager
+  const updateSolutionsPageData = async (data: Partial<SolutionsPageData>) => {
+    const mergedData: SolutionsPageData = {
+      ...solutionsPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || solutionsPageData.sectionOrder,
+      sectionVisibility: { ...solutionsPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setSolutionsPageData(mergedData);
+    localStorage.setItem("vrat_cms_solutions_page_data", JSON.stringify(mergedData));
+    addLog("Updated Solutions Page Layout", "Page Builder", "Saved custom section order and content for Solutions Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, solutions_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist solutionsPageData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14g. Products Page Manager
+  const updateProductsPageData = async (data: Partial<ProductsPageData>) => {
+    const mergedData: ProductsPageData = {
+      ...productsPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || productsPageData.sectionOrder,
+      sectionVisibility: { ...productsPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setProductsPageData(mergedData);
+    localStorage.setItem("vrat_cms_products_page_data", JSON.stringify(mergedData));
+    addLog("Updated Products Page Layout", "Page Builder", "Saved custom section order and content for Products Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, products_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist productsPageData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14h. Projects Page Manager
+  const updateProjectsPageData = async (data: Partial<ProjectsPageData>) => {
+    const mergedData: ProjectsPageData = {
+      ...projectsPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || projectsPageData.sectionOrder,
+      sectionVisibility: { ...projectsPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setProjectsPageData(mergedData);
+    localStorage.setItem("vrat_cms_projects_page_data", JSON.stringify(mergedData));
+    addLog("Updated Projects Page Layout", "Page Builder", "Saved custom section order and content for Projects Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, projects_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist projectsPageData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14i. Gallery Page Manager
+  const updateGalleryPageData = async (data: Partial<GalleryPageData>) => {
+    const mergedData: GalleryPageData = {
+      ...galleryPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || galleryPageData.sectionOrder,
+      sectionVisibility: { ...galleryPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setGalleryPageData(mergedData);
+    localStorage.setItem("vrat_cms_gallery_page_data", JSON.stringify(mergedData));
+    addLog("Updated Gallery Page Layout", "Page Builder", "Saved custom section order and content for Gallery Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, gallery_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist galleryPageData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14j. Blog Page Manager
+  const updateBlogPageData = async (data: Partial<BlogPageData>) => {
+    const mergedData: BlogPageData = {
+      ...blogPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || blogPageData.sectionOrder,
+      sectionVisibility: { ...blogPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setBlogPageData(mergedData);
+    localStorage.setItem("vrat_cms_blog_page_data", JSON.stringify(mergedData));
+    addLog("Updated Blog Page Layout", "Page Builder", "Saved custom section order and content for Blog Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, blog_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist blogPageData to Supabase:", err);
+      }
+    }
+  };
+
+  // 14k. Contact Page Manager
+  const updateContactPageData = async (data: Partial<ContactPageData>) => {
+    const mergedData: ContactPageData = {
+      ...contactPageData,
+      ...data,
+      sectionOrder: data.sectionOrder || contactPageData.sectionOrder,
+      sectionVisibility: { ...contactPageData.sectionVisibility, ...(data.sectionVisibility || {}) },
+    };
+    setContactPageData(mergedData);
+    localStorage.setItem("vrat_cms_contact_page_data", JSON.stringify(mergedData));
+    addLog("Updated Contact Page Layout", "Page Builder", "Saved custom section order and content for Contact Page");
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data: currentSettings } = await supabase.from("settings").select("*").eq("id", "global_config").maybeSingle();
+        const currentSocial = (currentSettings && typeof currentSettings.social_links === "object" && currentSettings.social_links) || {};
+        await supabase.from("settings").upsert({
+          id: "global_config",
+          social_links: { ...currentSocial, contact_page_data: mergedData },
+          updated_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to persist contactPageData to Supabase:", err);
+      }
+    }
+  };
+
   // 15. SEO Metadata
   const updateSEOMetadata = (pageId: string, seo: Partial<SEOMetadata>) => {
     setSeoMetadata((prev) => ({
@@ -1563,6 +2017,26 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
         updateMediaAltText,
         heroConfigs,
         updateHeroConfig,
+        homePageData,
+        updateHomePageData,
+        aboutPageData,
+        updateAboutPageData,
+        servicesPageData,
+        updateServicesPageData,
+        footerData,
+        updateFooterData,
+        solutionsPageData,
+        updateSolutionsPageData,
+        productsPageData,
+        updateProductsPageData,
+        projectsPageData,
+        updateProjectsPageData,
+        galleryPageData,
+        updateGalleryPageData,
+        blogPageData,
+        updateBlogPageData,
+        contactPageData,
+        updateContactPageData,
         seoMetadata,
         updateSEOMetadata,
         logs,

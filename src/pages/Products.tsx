@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 
 export default function Products() {
-  const { products, heroConfigs, submitLead } = useCMS();
-  const hero = heroConfigs["products"];
+  const { products, heroConfigs, submitLead, productsPageData } = useCMS();
+  const hero = productsPageData?.hero || heroConfigs["products"];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");

@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 
 export default function Blog() {
-  const { blogs, heroConfigs, submitLead, leads } = useCMS();
-  const hero = heroConfigs["blog"];
+  const { blogs, heroConfigs, submitLead, leads, blogPageData } = useCMS();
+  const hero = blogPageData?.hero || heroConfigs["blog"];
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");

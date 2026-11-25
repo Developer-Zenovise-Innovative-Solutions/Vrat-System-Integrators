@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 
 export default function Projects() {
-  const { caseStudies, heroConfigs } = useCMS();
-  const hero = heroConfigs["projects"];
+  const { caseStudies, heroConfigs, projectsPageData } = useCMS();
+  const hero = projectsPageData?.hero || heroConfigs["projects"];
 
   const [selectedIndustry, setSelectedIndustry] = useState("All");
   const [selectedTech, setSelectedTech] = useState("All");

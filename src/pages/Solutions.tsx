@@ -34,8 +34,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 export default function Solutions() {
   const { slug } = useParams<{ slug?: string }>();
-  const { solutions, heroConfigs } = useCMS();
-  const hero = heroConfigs["solutions"];
+  const { solutions, heroConfigs, solutionsPageData } = useCMS();
+  const hero = solutionsPageData?.hero || heroConfigs["solutions"];
 
   const [activeSlug, setActiveSlug] = useState<string>(slug || "commercial");
 

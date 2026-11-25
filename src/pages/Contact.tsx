@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 
 export default function Contact() {
-  const { settings, heroConfigs, submitLead } = useCMS();
-  const hero = heroConfigs["contact"];
+  const { settings, heroConfigs, submitLead, contactPageData } = useCMS();
+  const hero = contactPageData?.hero || heroConfigs["contact"];
 
   // Form Mode Toggle (Requirement 2)
   const [activeFormTab, setActiveFormTab] = useState<"inquiry" | "survey">("inquiry");

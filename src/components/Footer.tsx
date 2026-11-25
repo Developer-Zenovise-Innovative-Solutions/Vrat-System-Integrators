@@ -59,11 +59,15 @@ function XTwitterIcon({ className }: { className?: string }) {
 }
 
 export default function Footer() {
-  const { settings, services, solutions, submitLead, leads } = useCMS();
+  const { settings, services, solutions, submitLead, leads, footerData } = useCMS();
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsSuccess, setNewsSuccess] = useState(false);
   const [newsError, setNewsError] = useState("");
   const [newsSubmitting, setNewsSubmitting] = useState(false);
+
+  const phoneDisplay = footerData?.preFooter?.phoneNumber || settings.phone;
+  const emailDisplay = footerData?.preFooter?.emailAddress || settings.salesEmail;
+  const addressDisplay = footerData?.preFooter?.addressText || settings.cityStateZip || settings.address;
 
   const handleNewsletter = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,14 +149,16 @@ export default function Footer() {
               <Phone className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">Customer Care & Support (Click for WhatsApp)</div>
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">
+                {footerData?.preFooter?.phoneLabel || "Customer Care & Support (Click for WhatsApp)"}
+              </div>
               <a
-                href={getWhatsAppUrl(settings.phone, "Hello VRAT System, I would like to inquire about customer care & support.")}
+                href={getWhatsAppUrl(phoneDisplay, "Hello VRAT System, I would like to inquire about customer care & support.")}
                 target="_blank"
                 rel="noreferrer"
                 className="text-white font-bold text-sm hover:text-blue-400 transition flex items-center gap-1.5"
               >
-                {settings.phone}
+                {phoneDisplay}
               </a>
             </div>
           </div>
@@ -162,9 +168,11 @@ export default function Footer() {
               <Mail className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">Business Enquiry & Sales</div>
-              <a href={`mailto:${settings.salesEmail}`} className="text-white font-bold text-sm hover:text-blue-400 transition">
-                {settings.salesEmail}
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">
+                {footerData?.preFooter?.emailLabel || "Business Enquiry & Sales"}
+              </div>
+              <a href={`mailto:${emailDisplay}`} className="text-white font-bold text-sm hover:text-blue-400 transition">
+                {emailDisplay}
               </a>
             </div>
           </div>
@@ -174,8 +182,10 @@ export default function Footer() {
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">Head Office (Surat)</div>
-              <div className="text-white font-medium text-xs truncate max-w-xs">{settings.cityStateZip}</div>
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">
+                {footerData?.preFooter?.addressLabel || "Head Office (Surat)"}
+              </div>
+              <div className="text-white font-medium text-xs truncate max-w-xs">{addressDisplay}</div>
             </div>
           </div>
         </div>
@@ -188,34 +198,43 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-3 group">
               <img
-                src={settings.logoUrl || logoIcon}
+                src={footerData?.company?.logoUrl || settings.footerLogoUrl || settings.logoUrl || logoIcon}
                 alt="VRAT System Integrators Logo"
                 className="w-10 h-10 object-contain drop-shadow group-hover:scale-105 transition-transform"
               />
               <div>
-                <div className="font-bold text-base text-white tracking-wide">VRAT</div>
-                <div className="text-[10px] tracking-widest uppercase text-blue-400 font-semibold">System Integrators</div>
+                <div className="font-bold text-base text-white tracking-wide">
+                  {footerData?.company?.title || "VRAT"}
+                </div>
+                <div className="text-[10px] tracking-widest uppercase text-blue-400 font-semibold">
+                  {footerData?.company?.subtitle || "System Integrators"}
+                </div>
               </div>
             </Link>
             <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
-              Leading provider of integrated electronic security, CCTV surveillance, fire alarms, access control, enterprise networking, and smart building automation solutions across India for over 17 years.
+              {footerData?.company?.description ||
+                "Leading provider of integrated electronic security, CCTV surveillance, fire alarms, access control, enterprise networking, and smart building automation solutions across India for over 17 years."}
             </p>
+            {footerData?.company?.certificationsBadge && (
+              <div className="text-[10px] text-blue-400 font-medium py-1 px-2.5 rounded-lg bg-blue-950/40 border border-blue-900/40 inline-block">
+                {footerData.company.certificationsBadge}
+              </div>
+            )}
             <div className="text-[11px] text-slate-400 space-y-1 pt-2 border-t border-slate-800/60 max-w-sm">
-              <div><span className="text-slate-200 font-semibold">Head Office:</span> Nanpura, Surat, Gujarat – 395001</div>
-              <div><span className="text-slate-200 font-semibold">Branch Office:</span> GIDC, Ankleshwar, Gujarat – 393002</div>
+              <div><span className="text-slate-200 font-semibold">Head Office:</span> {settings.address || "Nanpura, Surat, Gujarat – 395001"}</div>
               <div>
                 <span className="text-slate-200 font-semibold">Customer Care:</span>{" "}
                 <a
-                  href={getWhatsAppUrl("+91 95107 59646", "Hello VRAT Customer Care, I need support.")}
+                  href={getWhatsAppUrl(phoneDisplay, "Hello VRAT Customer Care, I need support.")}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-blue-400 text-white font-semibold"
                 >
-                  +91 95107 59646
+                  {phoneDisplay}
                 </a>{" "}
                 |{" "}
-                <a href="mailto:Service@vratsystem.co.in" className="hover:underline text-blue-400">
-                  Service@vratsystem.co.in
+                <a href={`mailto:${settings.supportEmail || "Service@vratsystem.co.in"}`} className="hover:underline text-blue-400">
+                  {settings.supportEmail || "Service@vratsystem.co.in"}
                 </a>
               </div>
             </div>
@@ -288,7 +307,12 @@ export default function Footer() {
 
             {/* Newsletter Subscription (Requirement 11) */}
             <div className="pt-2">
-              <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">Subscribe to Newsletter</div>
+              <div className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2">
+                {footerData?.newsletter?.heading || "Subscribe to Newsletter"}
+              </div>
+              <p className="text-[11px] text-slate-400 mb-2 leading-relaxed">
+                {footerData?.newsletter?.subtitle || "Get enterprise security advisories and regulatory updates."}
+              </p>
               {newsSuccess ? (
                 <div className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
                   <CheckCircle2 className="w-4 h-4" /> Thank you for subscribing!
@@ -299,7 +323,7 @@ export default function Footer() {
                     <input
                       type="email"
                       required
-                      placeholder="Enter corporate email..."
+                      placeholder={footerData?.newsletter?.placeholder || "Enter corporate email..."}
                       value={newsletterEmail}
                       onChange={(e) => setNewsletterEmail(e.target.value)}
                       className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -309,7 +333,7 @@ export default function Footer() {
                       disabled={newsSubmitting}
                       className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition"
                     >
-                      {newsSubmitting ? "..." : "Join"}
+                      {newsSubmitting ? "..." : (footerData?.newsletter?.buttonText || "Join")}
                     </button>
                   </div>
                   {newsError && (
@@ -386,7 +410,12 @@ export default function Footer() {
       <div className="border-t border-slate-800/60 py-6 bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
           <div>
-            © {new Date().getFullYear()} VRAT SYSTEM. All rights reserved. | Official Website: <a href="https://vratsystems.com/" className="text-slate-400 hover:text-blue-400 font-medium">vratsystems.com</a>
+            {footerData?.bottomBar?.copyright || `© ${new Date().getFullYear()} VRAT SYSTEM. All rights reserved.`}
+            {footerData?.bottomBar?.madeInText && (
+              <span className="hidden md:inline ml-2 pl-2 border-l border-slate-800 text-slate-400">
+                {footerData.bottomBar.madeInText}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <Link to="/faq" className="hover:text-slate-300">Privacy Policy</Link>

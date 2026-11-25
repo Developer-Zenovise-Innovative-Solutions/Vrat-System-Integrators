@@ -106,8 +106,8 @@ const GALLERY_DATA: GalleryItem[] = [
 ];
 
 export default function Gallery() {
-  const { heroConfigs, mediaItems } = useCMS();
-  const hero = heroConfigs["gallery"];
+  const { heroConfigs, mediaItems, galleryPageData } = useCMS();
+  const hero = galleryPageData?.hero || heroConfigs["gallery"];
 
   const [activeCat, setActiveCat] = useState("All");
   const [sliderPos, setSliderPos] = useState(50);
