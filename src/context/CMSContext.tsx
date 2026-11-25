@@ -549,6 +549,16 @@ const mapJobToDB = (j: JobOpening) => ({
   updated_at: new Date().toISOString(),
 });
 
+const safeToISO = (val?: string) => {
+  if (!val) return new Date().toISOString();
+  if (val.includes("T") && (val.endsWith("Z") || val.includes("+"))) return val;
+  const parsed = Date.parse(val);
+  if (!isNaN(parsed)) return new Date(parsed).toISOString();
+  const d = new Date(val.replace(" ", "T"));
+  if (!isNaN(d.getTime())) return d.toISOString();
+  return new Date().toISOString();
+};
+
 const mapLeadFromDB = (row: any): LeadItem => ({
   id: row.id,
   type: row.type || "Inquiry",
@@ -568,7 +578,7 @@ const mapLeadFromDB = (row: any): LeadItem => ({
   status: row.status || "New",
   assignedTo: row.assigned_to,
   notes: row.notes,
-  createdDate: row.created_date || "",
+  createdDate: row.created_date ? new Date(row.created_date).toLocaleString("en-IN") : new Date().toLocaleString("en-IN"),
 });
 
 const mapLeadToDB = (l: LeadItem) => ({
@@ -590,7 +600,7 @@ const mapLeadToDB = (l: LeadItem) => ({
   status: l.status,
   assigned_to: l.assignedTo,
   notes: l.notes,
-  created_date: l.createdDate || new Date().toISOString(),
+  created_date: safeToISO(l.createdDate),
 });
 
 const mapTestimonialFromDB = (row: any): TestimonialItem => ({
@@ -903,7 +913,12 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
       // 11. Leads & Inquiries
       const { data: dbLeads } = await supabase.from("leads").select("*").order("created_date", { ascending: false });
       if (dbLeads && dbLeads.length > 0) {
-        setLeads(dbLeads.map(mapLeadFromDB));
+        setLeads((prevLeads) => {
+          const fromDB = dbLeads.map(mapLeadFromDB);
+          const dbIds = new Set(fromDB.map((l) => l.id));
+          const localOnly = prevLeads.filter((l) => !dbIds.has(l.id));
+          return [...localOnly, ...fromDB];
+        });
       }
 
       // 12. Testimonials
@@ -1366,10 +1381,18 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     const newApp: JobApplication = {
       ...app,
       id: "app-" + Date.now(),
-      appliedDate: new Date().toLocaleString(),
+      appliedDate: new Date().toLocaleString("en-IN"),
       status: "New",
     };
-    setApplications((prev) => [newApp, ...prev]);
+    setApplications((prev) => {
+      const updated = [newApp, ...prev];
+      try {
+        localStorage.setItem("vrat_cms_applications", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("Storage sync failed:", err);
+      }
+      return updated;
+    });
     addLog("New Job Application", "Careers", `Candidate ${app.fullName} applied for ${app.jobTitle}`);
 
     if (isSupabaseConfigured) {
@@ -1384,8 +1407,8 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
           current_city: newApp.currentCity,
           experience: newApp.experience,
           current_company: newApp.currentCompany,
-          current_ctc: newApp.currentCtc,
-          expected_ctc: newApp.expectedCtc,
+          current_ctc: (newApp as any).currentCTC || (newApp as any).currentCtc,
+          expected_ctc: (newApp as any).expectedCTC || (newApp as any).expectedCtc,
           notice_period: newApp.noticePeriod,
           highest_qualification: newApp.highestQualification,
           resume_file_name: newApp.resumeFileName,
@@ -1416,15 +1439,27 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
     const newLead: LeadItem = {
       ...lead,
       id: "lead-" + Date.now(),
-      createdDate: new Date().toLocaleString(),
+      createdDate: new Date().toLocaleString("en-IN"),
       status: "New",
     };
-    setLeads((prev) => [newLead, ...prev]);
+    setLeads((prev) => {
+      const updated = [newLead, ...prev];
+      try {
+        localStorage.setItem("vrat_cms_leads", JSON.stringify(updated));
+      } catch (err) {
+        console.warn("Storage sync failed:", err);
+      }
+      return updated;
+    });
     addLog("New Inbound Lead", "Leads", `${lead.type} from ${lead.name} (${lead.company || "Individual"})`);
 
     if (isSupabaseConfigured) {
       try {
-        await supabase.from("leads").insert(mapLeadToDB(newLead));
+        const payload = mapLeadToDB(newLead);
+        const { error } = await supabase.from("leads").insert(payload);
+        if (error) {
+          console.warn("Supabase submit lead error:", error);
+        }
       } catch (e) { console.warn("Supabase submit lead:", e); }
     }
   };

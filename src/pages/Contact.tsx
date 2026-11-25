@@ -200,7 +200,7 @@ export default function Contact() {
           whatsappNumber: "+91 95107 59646",
           address: "Ground Floor, Flat No. F-1 to F-4, Vighneshwar Estate, Near Gandhi Smruti Bhavan, Nanpura, Surat, Gujarat, India – 395001.",
           googleMapsUrl: "https://maps.google.com/?q=Vighneshwar+Estate+Nanpura+Surat+Gujarat+395001",
-          email: "Nimesh.patel@vratsystem.co.in",
+          email: "nimesh.patel@vratsystems.com",
           active: true,
         },
         {
@@ -272,11 +272,11 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">Business & Sales</h3>
             <p className="text-slate-500 text-xs mb-3">Quotations, product pricing & enterprise tenders.</p>
             <div className="space-y-1">
-              <a href={`mailto:${settings.salesEmail || "Sales@vratsystem.co.in"}`} className="text-blue-600 font-semibold text-xs hover:underline block truncate">
-                {settings.salesEmail || "Sales@vratsystem.co.in"}
+              <a href={`mailto:${settings.salesEmail || "sales@vratsystems.com"}`} className="text-blue-600 font-semibold text-xs hover:underline block truncate">
+                {settings.salesEmail || "sales@vratsystems.com"}
               </a>
-              <a href={`mailto:${settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}`} className="text-slate-600 font-medium text-xs hover:text-blue-600 hover:underline block truncate">
-                {settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}
+              <a href={`mailto:${settings.primaryEmail || "nimesh.patel@vratsystems.com"}`} className="text-slate-600 font-medium text-xs hover:text-blue-600 hover:underline block truncate">
+                {settings.primaryEmail || "nimesh.patel@vratsystems.com"}
               </a>
               {settings.secondaryEmail && (
                 <a href={`mailto:${settings.secondaryEmail}`} className="text-slate-500 font-medium text-[11px] hover:text-blue-600 hover:underline block truncate">
@@ -336,8 +336,8 @@ export default function Contact() {
             <h3 className="font-bold text-slate-900 text-base mb-1">General Contact</h3>
             <p className="text-slate-500 text-xs mb-3">Management, partnerships, and executive contact.</p>
             <div className="space-y-1">
-              <a href={`mailto:${settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}`} className="text-amber-600 font-semibold text-xs hover:underline block truncate">
-                {settings.primaryEmail || "Nimesh.patel@vratsystem.co.in"}
+              <a href={`mailto:${settings.primaryEmail || "nimesh.patel@vratsystems.com"}`} className="text-amber-600 font-semibold text-xs hover:underline block truncate">
+                {settings.primaryEmail || "nimesh.patel@vratsystems.com"}
               </a>
               {settings.secondaryEmail && (
                 <a href={`mailto:${settings.secondaryEmail}`} className="text-slate-600 font-medium text-xs hover:text-amber-600 hover:underline block truncate">

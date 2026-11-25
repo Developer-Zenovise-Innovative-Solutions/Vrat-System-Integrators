@@ -80,13 +80,13 @@ export default function Products() {
     setQuoteError("");
 
     try {
-      submitLead({
+      await submitLead({
         type: "Product Quote",
         name: quoteForm.name,
-        company: quoteForm.company,
+        company: quoteForm.company || "Individual / Corporate Client",
         email: quoteForm.email,
         phone: quoteForm.phone,
-        city: quoteForm.city,
+        city: quoteForm.city || "Not specified",
         serviceOrProduct: quoteProduct?.name || "General Product Inquiry",
         estimatedSize: `Qty: ${quoteForm.quantity}`,
         message: quoteForm.message || `Quote request for ${quoteProduct?.name || "products"} [ID: ${quoteProduct?.id || "N/A"}]`,
@@ -97,9 +97,9 @@ export default function Products() {
         name: quoteForm.name,
         email: quoteForm.email,
         phone: quoteForm.phone,
-        company: quoteForm.company,
+        company: quoteForm.company || "Not provided",
         subject: `[Quotation Request] ${quoteProduct?.name || "Product"} (ID: ${quoteProduct?.id}) - ${quoteForm.name}`,
-        message: quoteForm.message,
+        message: quoteForm.message || `Official quote request submitted for ${quoteProduct?.name || "hardware"}.`,
         details: {
           "Product Name": quoteProduct?.name || "General Inquiry",
           "Product ID": quoteProduct?.id || "N/A",

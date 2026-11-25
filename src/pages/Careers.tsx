@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useCMS } from "../context/CMSContext";
 import { JobOpening } from "../types";
+import { sendEmailNotification } from "../lib/emailService";
 import {
   Briefcase,
   GraduationCap,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function Careers() {
-  const { jobs, heroConfigs, submitApplication } = useCMS();
+  const { jobs, heroConfigs, submitApplication, submitLead } = useCMS();
   const hero = heroConfigs["careers"];
 
   const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
@@ -41,7 +42,9 @@ export default function Careers() {
     linkedinProfile: "",
     coverLetter: "",
   });
+  const [appSubmitting, setAppSubmitting] = useState(false);
   const [appSuccess, setAppSuccess] = useState(false);
+  const [appError, setAppError] = useState("");
 
   const departments = ["All", ...Array.from(new Set(jobs.map((j) => j.department)))];
 
@@ -49,48 +52,94 @@ export default function Careers() {
     return selectedDept === "All" || j.department === selectedDept;
   });
 
-  const handleApplicationSubmit = (e: React.FormEvent) => {
+  const handleApplicationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appForm.fullName || !appForm.email || !appForm.phone) return;
 
-    submitApplication({
-      jobId: applyJob?.id || "general",
-      jobTitle: applyJob?.title || "General Application",
-      fullName: appForm.fullName,
-      email: appForm.email,
-      phone: appForm.phone,
-      currentCity: appForm.currentCity,
-      experience: appForm.experience,
-      currentCompany: appForm.currentCompany,
-      currentCTC: appForm.currentCTC,
-      expectedCTC: appForm.expectedCTC,
-      noticePeriod: appForm.noticePeriod,
-      highestQualification: appForm.highestQualification,
-      resumeFileName: appForm.resumeFileName || "candidate_resume.pdf",
-      linkedinProfile: appForm.linkedinProfile,
-      coverLetter: appForm.coverLetter,
-    });
+    setAppSubmitting(true);
+    setAppError("");
 
-    setAppSuccess(true);
-    setTimeout(() => {
-      setAppSuccess(false);
-      setApplyJob(null);
-      setAppForm({
-        fullName: "",
-        email: "",
-        phone: "",
-        currentCity: "",
-        experience: "1-3 Years",
-        currentCompany: "",
-        currentCTC: "",
-        expectedCTC: "",
-        noticePeriod: "Immediate / 15 Days",
-        highestQualification: "B.E / B.Tech",
-        resumeFileName: "",
-        linkedinProfile: "",
-        coverLetter: "",
+    try {
+      // 1. Submit to Job Applications database
+      await submitApplication({
+        jobId: applyJob?.id || "general",
+        jobTitle: applyJob?.title || "General Application",
+        fullName: appForm.fullName,
+        email: appForm.email,
+        phone: appForm.phone,
+        currentCity: appForm.currentCity,
+        experience: appForm.experience,
+        currentCompany: appForm.currentCompany,
+        currentCTC: appForm.currentCTC,
+        expectedCTC: appForm.expectedCTC,
+        noticePeriod: appForm.noticePeriod,
+        highestQualification: appForm.highestQualification,
+        resumeFileName: appForm.resumeFileName || "candidate_resume.pdf",
+        linkedinProfile: appForm.linkedinProfile,
+        coverLetter: appForm.coverLetter,
       });
-    }, 2500);
+
+      // 2. Also register into Leads CRM so admin sees it under Inbound Leads
+      await submitLead({
+        type: "Job Application",
+        name: appForm.fullName,
+        email: appForm.email,
+        phone: appForm.phone,
+        city: appForm.currentCity,
+        serviceOrProduct: applyJob?.title || "Careers",
+        company: appForm.currentCompany || "Candidate",
+        message: `Job Application for ${applyJob?.title || "General Application"}. Qualification: ${appForm.highestQualification}, Experience: ${appForm.experience}, Notice: ${appForm.noticePeriod}${appForm.coverLetter ? ". Note: " + appForm.coverLetter : ""}`,
+      });
+
+      // 3. Dispatch dual email notification to nimesh.patel@vratsystems.com & nimeshpatel.vsi@gmail.com
+      await sendEmailNotification({
+        formType: "Job Application",
+        name: appForm.fullName,
+        email: appForm.email,
+        phone: appForm.phone,
+        company: appForm.currentCompany,
+        subject: `[Job Application] ${applyJob?.title || "General Position"} - ${appForm.fullName}`,
+        message: appForm.coverLetter || `Candidate application for ${applyJob?.title || "Position"}.`,
+        details: {
+          "Position Applied": applyJob?.title || "General Application",
+          "Job ID": applyJob?.id || "N/A",
+          "Experience Level": appForm.experience,
+          "Highest Qualification": appForm.highestQualification,
+          "Current City": appForm.currentCity || "Not provided",
+          "Current Employer": appForm.currentCompany || "Not provided",
+          "Notice Period": appForm.noticePeriod,
+          "Current CTC": appForm.currentCTC || "Confidential",
+          "Expected CTC": appForm.expectedCTC || "Negotiable",
+          "Resume Attachment": appForm.resumeFileName || "candidate_resume.pdf",
+          "LinkedIn URL": appForm.linkedinProfile || "N/A",
+        },
+      });
+
+      setAppSuccess(true);
+      setTimeout(() => {
+        setAppSuccess(false);
+        setApplyJob(null);
+        setAppForm({
+          fullName: "",
+          email: "",
+          phone: "",
+          currentCity: "",
+          experience: "1-3 Years",
+          currentCompany: "",
+          currentCTC: "",
+          expectedCTC: "",
+          noticePeriod: "Immediate / 15 Days",
+          highestQualification: "B.E / B.Tech",
+          resumeFileName: "",
+          linkedinProfile: "",
+          coverLetter: "",
+        });
+      }, 2500);
+    } catch (err: any) {
+      setAppError(err?.message || "Failed to submit application. Please try again.");
+    } finally {
+      setAppSubmitting(false);
+    }
   };
 
   return (
@@ -447,10 +496,10 @@ export default function Careers() {
                   </div>
                 </div>
 
-                {/* Simulated Resume Upload */}
+                {/* Resume Upload - relative overflow-hidden to prevent transparent file input from hijacking modal */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Resume / CV Attachment (PDF / DOC)</label>
-                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:border-blue-400 transition bg-slate-50">
+                  <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:border-blue-400 transition bg-slate-50 overflow-hidden cursor-pointer">
                     <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-1" />
                     <p className="text-xs font-medium text-slate-700">
                       {appForm.resumeFileName ? (
@@ -469,7 +518,7 @@ export default function Careers() {
                           setAppForm({ ...appForm, resumeFileName: e.target.files[0].name });
                         }
                       }}
-                      className="opacity-0 absolute inset-0 cursor-pointer"
+                      className="opacity-0 absolute inset-0 cursor-pointer w-full h-full"
                     />
                   </div>
                 </div>
@@ -485,11 +534,18 @@ export default function Careers() {
                   />
                 </div>
 
+                {appError && (
+                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                    {appError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                  disabled={appSubmitting}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl text-xs transition shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
-                  <Send className="w-3.5 h-3.5" /> Submit Job Application
+                  <Send className="w-3.5 h-3.5" /> {appSubmitting ? "Submitting Application..." : "Submit Job Application"}
                 </button>
               </form>
             )}

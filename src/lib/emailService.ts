@@ -67,16 +67,14 @@ export async function sendEmailNotification(
   }
 
   // TIER 2: Direct HTTP FormSubmit Dual Relay to both inboxes in parallel
-  // Guarantees both nimesh.patel@vratsystems.com and nimeshpatel.vsi@gmail.com receive all form submissions.
+  // Dispatches directly to both nimesh.patel@vratsystems.com and nimeshpatel.vsi@gmail.com.
   try {
     const relayPromises = RECIPIENT_EMAILS.map(async (targetEmail) => {
-      const otherEmail = RECIPIENT_EMAILS.find((e) => e !== targetEmail);
       const relayBody: Record<string, any> = {
         _subject: emailSubject,
         _template: "table",
         _captcha: "false",
         _replyto: payload.email,
-        _cc: otherEmail,
         "Submission Type": payload.formType,
         "Full Name": payload.name || "Website Visitor",
         "Email Address": payload.email,
