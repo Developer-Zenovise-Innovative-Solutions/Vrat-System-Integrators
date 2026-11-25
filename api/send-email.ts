@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       subject,
     } = req.body || {};
 
-    const targetRecipient = process.env.SMTP_TO || "nimeshpatel.vsi@gmail.com";
+    const targetRecipient = process.env.SMTP_TO || "nimesh.patel@vratsystems.com, nimeshpatel.vsi@gmail.com";
     const emailSubject = subject || `[VRAT SYSTEM] New ${formType} from ${name}`;
 
     // Format extra details rows

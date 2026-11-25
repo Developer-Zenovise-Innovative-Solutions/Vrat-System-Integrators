@@ -4,7 +4,13 @@ import { useToast } from "../context/ToastContext";
 import { checkSupabaseConnection } from "../lib/supabase";
 import { BusinessLocation, LocationType } from "../types";
 import ImageUploader from "../components/ImageUploader";
-import { sendEmailNotification, PRIMARY_RECIPIENT } from "../lib/emailService";
+import {
+  sendEmailNotification,
+  PRIMARY_RECIPIENT,
+  SECONDARY_RECIPIENT,
+  ALL_RECIPIENTS_DISPLAY,
+  RECIPIENT_EMAILS
+} from "../lib/emailService";
 import {
   Settings,
   Save,
@@ -885,13 +891,38 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* Primary Recipient Card */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-            <div className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Configured Target Recipient</div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-emerald-400" />
-                <span className="text-white font-mono text-sm font-bold">{PRIMARY_RECIPIENT}</span>
+          {/* Dual Recipients Configuration Card */}
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">Dual Active Target Recipients (Both Receive All Forms)</div>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">2 Inboxes Active</span>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Corporate Primary Email</div>
+                  <div className="text-white font-mono text-xs font-bold">{PRIMARY_RECIPIENT}</div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Operational Gmail</div>
+                  <div className="text-white font-mono text-xs font-bold">{SECONDARY_RECIPIENT}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-800/80">
+              <div className="text-[11px] text-slate-400">
+                Any enquiry submitted anywhere on the live website routes directly to <span className="text-emerald-400 font-semibold">both addresses simultaneously</span>.
               </div>
               <button
                 type="button"
@@ -901,23 +932,23 @@ export default function AdminSettings() {
                   setEmailTestResult(null);
                   try {
                     const result = await sendEmailNotification({
-                      formType: "Admin Diagnostic Test",
+                      formType: "Admin Diagnostic Dual Test",
                       name: "VRAT System Admin",
                       email: PRIMARY_RECIPIENT,
                       phone: "+91 95107 59646",
                       company: "VRAT System Integrators",
-                      subject: `[Diagnostic Verification] VRAT System Web Gateway Test - ${new Date().toLocaleTimeString()}`,
-                      message: "This is a direct diagnostic test from the Admin Panel verifying that email dispatch is operating correctly.",
+                      subject: `[Dual Inbox Verification] VRAT System Web Gateway Test - ${new Date().toLocaleTimeString()}`,
+                      message: "This is a direct diagnostic test from the Admin Panel verifying that email dispatch is operating correctly to both nimesh.patel@vratsystems.com and nimeshpatel.vsi@gmail.com.",
                       details: {
                         "Triggered By": "Administrator",
-                        "Delivery Engine": "Multi-Tier SMTP + Direct HTTP Relay",
-                        "Target Email": PRIMARY_RECIPIENT,
+                        "Delivery Engine": "Multi-Tier Dual Relay",
+                        "Target Inboxes": ALL_RECIPIENTS_DISPLAY,
                         "System Time": new Date().toLocaleString(),
                       },
                     });
                     setEmailTestResult(result);
                     if (result.success) {
-                      toast.success("Test Dispatched!", `Email sent to ${PRIMARY_RECIPIENT} via ${result.deliveredBy || "relay"}.`);
+                      toast.success("Test Dispatched!", `Email dispatched to ${ALL_RECIPIENTS_DISPLAY} via ${result.deliveredBy || "relay"}.`);
                     } else {
                       toast.error("Dispatch Notice", result.message);
                     }
@@ -928,7 +959,7 @@ export default function AdminSettings() {
                     setIsTestingEmail(false);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-600/30"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition flex items-center gap-2 shadow-lg shadow-blue-600/30 flex-shrink-0"
               >
                 {isTestingEmail ? (
                   <>
@@ -936,7 +967,7 @@ export default function AdminSettings() {
                   </>
                 ) : (
                   <>
-                    <Send className="w-3.5 h-3.5" /> Send Test Email Now
+                    <Send className="w-3.5 h-3.5" /> Send Test to Both Inboxes
                   </>
                 )}
               </button>
@@ -970,20 +1001,20 @@ export default function AdminSettings() {
                 Connects through <span className="font-mono text-slate-300">/api/send-email</span> endpoint using Node.js nodemailer.
               </p>
               <div className="text-[10px] text-slate-500 font-mono">
-                Host: smtp.gmail.com | Port: 465 SSL | Recipient: {PRIMARY_RECIPIENT}
+                Host: smtp.gmail.com | Port: 465 SSL | Recipients: {ALL_RECIPIENTS_DISPLAY}
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
               <div className="text-white font-bold text-xs flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                Tier 2: FormSubmit Direct Relay
+                Tier 2: FormSubmit Dual Relay
               </div>
               <p className="text-slate-400 text-[11px] leading-relaxed">
-                Direct HTTPS delivery to FormSubmit for instant mailbox delivery.
+                Parallel HTTPS direct relay to FormSubmit for instant mailbox delivery to both inboxes.
               </p>
-              <div className="text-[10px] text-blue-400/90 font-medium bg-blue-950/40 p-2 rounded-lg border border-blue-900/40">
-                💡 <span className="font-bold">Important One-Time Check:</span> If you haven't received emails yet, please check <span className="font-bold">{PRIMARY_RECIPIENT}</span>'s Spam or Promotions folder for a confirmation link titled <em>"Action Required: Confirm your email"</em> from FormSubmit to activate instant forwarding.
+              <div className="text-[10px] text-blue-400/90 font-medium bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 leading-relaxed">
+                💡 <span className="font-bold">One-Time Activation:</span> If FormSubmit sends an activation link titled <em>"Action Required: Confirm your email"</em> to either inbox, click Activate once to ensure uninterrupted live forwarding.
               </div>
             </div>
           </div>
