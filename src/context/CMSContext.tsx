@@ -173,6 +173,14 @@ const CMSContext = createContext<CMSContextType | undefined>(undefined);
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
     const saved = localStorage.getItem(`vrat_cms_${key}`);
+    if (key === "products" && saved) {
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed) || parsed.length < 50) {
+        localStorage.setItem(`vrat_cms_products`, JSON.stringify(defaultValue));
+        return defaultValue;
+      }
+      return parsed as T;
+    }
     return saved ? JSON.parse(saved) : defaultValue;
   } catch (e) {
     return defaultValue;
@@ -822,10 +830,11 @@ export function CMSProvider({ children }: { children: React.ReactNode }) {
 
       // 4. Products
       const { data: dbProducts } = await supabase.from("products").select("*");
-      if (dbProducts && dbProducts.length > 0) {
+      if (dbProducts && dbProducts.length >= 50) {
         setProducts(dbProducts.map(mapProductFromDB));
       } else {
-        // Auto-seed cloud if empty
+        // Auto-seed cloud if empty or old mock products
+        setProducts(INITIAL_PRODUCTS);
         for (const p of INITIAL_PRODUCTS) {
           await supabase.from("products").upsert(mapProductToDB(p));
         }

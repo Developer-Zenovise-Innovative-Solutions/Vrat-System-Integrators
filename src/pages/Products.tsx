@@ -11,6 +11,7 @@ import {
   Check,
   X,
   ArrowRight,
+  Shield,
   ShieldCheck,
   Send,
   Layers,
@@ -171,40 +172,58 @@ export default function Products() {
       {/* Catalog & Filter Section */}
       <section id="catalog" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Controls Bar */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
-          <div className="grid md:grid-cols-12 gap-4 items-center">
+        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-center">
             {/* Search */}
-            <div className="md:col-span-6 relative">
-              <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="sm:col-span-2 lg:col-span-5 relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search products by model, keyword, or feature..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
               />
             </div>
 
+            {/* Category Dropdown */}
+            <div className="lg:col-span-3">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="All">All Categories ({products.length})</option>
+                {categories.filter((c) => c !== "All").map((c) => (
+                  <option key={c} value={c}>
+                    {c} ({products.filter((p) => p.category === c).length})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Brand Dropdown */}
-            <div className="md:col-span-3">
+            <div className="lg:col-span-2">
               <select
                 value={selectedBrand}
                 onChange={(e) => setSelectedBrand(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
-                <option value="All">All Brands (OEMs)</option>
+                <option value="All">All Brands</option>
                 {brands.filter((b) => b !== "All").map((b) => (
-                  <option key={b} value={b}>{b}</option>
+                  <option key={b} value={b}>
+                    {b} ({products.filter((p) => p.brand === b).length})
+                  </option>
                 ))}
               </select>
             </div>
 
             {/* Compare Bar Button */}
-            <div className="md:col-span-3 flex justify-end">
+            <div className="lg:col-span-2 flex justify-end">
               <button
                 onClick={() => setShowCompareModal(true)}
                 disabled={compareList.length === 0}
-                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition ${
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition ${
                   compareList.length > 0
                     ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20"
                     : "bg-slate-100 text-slate-400 cursor-not-allowed"
@@ -216,22 +235,23 @@ export default function Products() {
             </div>
           </div>
 
-          {/* Category Badges */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-thin">
-            {categories.map((cat) => (
+          {(selectedCategory !== "All" || selectedBrand !== "All" || searchQuery) && (
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 text-xs text-slate-500">
+              <div>
+                Showing <span className="font-bold text-slate-900">{filteredProducts.length}</span> of {products.length} products
+              </div>
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                  selectedCategory === cat
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("All");
+                  setSelectedBrand("All");
+                }}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
               >
-                {cat}
+                Clear all filters
               </button>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Product Cards Grid */}
@@ -244,18 +264,32 @@ export default function Products() {
                 className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group"
               >
                 {/* Image & Badges */}
-                <div className="relative h-48 bg-slate-100 overflow-hidden">
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 flex flex-col gap-1">
-                    <span className="px-2.5 py-1 rounded-md bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold tracking-wide uppercase">
+                <div className="relative h-48 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 overflow-hidden flex items-center justify-center">
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center select-none group-hover:scale-105 transition-transform duration-300">
+                      <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-blue-400 mb-2 shadow-inner">
+                        <Shield className="w-6 h-6" />
+                      </div>
+                      <div className="text-[11px] font-bold text-white/90 truncate max-w-[200px]">
+                        {p.name.split(" — ")[1] || p.name}
+                      </div>
+                      <div className="text-[9px] text-blue-300 font-medium tracking-wide uppercase mt-0.5">
+                        {p.brand} Enterprise Hardware
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                    <span className="px-2.5 py-1 rounded-md bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold tracking-wide uppercase border border-white/10">
                       {p.brand}
                     </span>
                     {p.isFeatured && (
-                      <span className="px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-900 text-[10px] font-extrabold tracking-wide uppercase flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-900 text-[10px] font-extrabold tracking-wide uppercase flex items-center gap-1 shadow-sm">
                         <Sparkles className="w-2.5 h-2.5" /> Featured
                       </span>
                     )}
@@ -339,6 +373,9 @@ export default function Products() {
               <div>
                 <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{selectedProduct.brand} • {selectedProduct.category}</span>
                 <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
+                {selectedProduct.tagline && (
+                  <p className="text-xs font-semibold text-slate-500 mt-0.5">{selectedProduct.tagline}</p>
+                )}
               </div>
               <button
                 onClick={() => setSelectedProduct(null)}
@@ -350,8 +387,21 @@ export default function Products() {
 
             <div className="p-6 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="rounded-xl overflow-hidden bg-slate-100 h-64">
-                  <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                <div className="rounded-xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 h-64 flex items-center justify-center border border-slate-200">
+                  {selectedProduct.image ? (
+                    <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-white">
+                      <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-400 mb-3 shadow-inner">
+                        <Shield className="w-8 h-8" />
+                      </div>
+                      <div className="text-sm font-bold text-white max-w-xs">{selectedProduct.name}</div>
+                      <div className="text-xs text-blue-300 font-medium mt-1 max-w-xs">{selectedProduct.tagline}</div>
+                      <span className="mt-3 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-semibold tracking-wider uppercase border border-blue-400/30">
+                        {selectedProduct.brand} Certified
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm mb-2">Key Features</h4>
@@ -376,10 +426,13 @@ export default function Products() {
 
               {/* Technical Specifications Table */}
               <div>
-                <h4 className="font-bold text-slate-900 text-base mb-3">Technical Specifications</h4>
-                <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-slate-900 text-base">Technical Specifications</h4>
+                  <span className="text-xs text-slate-400 font-medium">{Object.keys(selectedProduct.specs).length} Parameters</span>
+                </div>
+                <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-200 max-h-96 overflow-y-auto">
                   {Object.entries(selectedProduct.specs).map(([key, val]) => (
-                    <div key={key} className="grid grid-cols-3 p-3 text-xs">
+                    <div key={key} className="grid grid-cols-3 p-3 text-xs hover:bg-slate-50 transition-colors">
                       <span className="font-semibold text-slate-700">{key}</span>
                       <span className="col-span-2 text-slate-600">{val}</span>
                     </div>

@@ -22,31 +22,37 @@ export default function AdminProducts() {
   const [isNew, setIsNew] = useState(false);
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
+  const [newSpecKey, setNewSpecKey] = useState("");
+  const [newSpecVal, setNewSpecVal] = useState("");
 
   const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.brand.toLowerCase().includes(search.toLowerCase());
+      p.brand.toLowerCase().includes(search.toLowerCase()) ||
+      (p.tagline && p.tagline.toLowerCase().includes(search.toLowerCase()));
     const matchesCat = catFilter === "All" || p.category === catFilter;
     return matchesSearch && matchesCat;
   });
 
   const handleCreateNew = () => {
     setEditingProduct({
-      id: "",
+      id: `prod-${Date.now()}`,
       name: "",
-      category: "CCTV Surveillance Systems",
-      brand: "Hikvision",
-      image: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=600&h=450&fit=crop&auto=format",
+      category: "CCTV & IP Surveillance",
+      brand: "CP PLUS",
+      image: "",
       tagline: "",
-      features: ["4K Resolution", "AI Detection", "PoE Support"],
-      applications: ["Commercial", "Industrial"],
+      features: [
+        "Commercial-grade high reliability hardware",
+        "Seamless integration with central security management",
+      ],
+      applications: ["Corporate Offices", "Commercial Buildings", "Manufacturing Units"],
       specs: {
-        "Resolution": "8 Megapixels",
-        "Power": "PoE / 12V DC",
-        "Weatherproof": "IP67"
+        "Image Sensor": "",
+        "Resolution": "",
+        "Power Source": "12 VDC / PoE",
       },
       status: "Published",
       isFeatured: false,
@@ -75,7 +81,12 @@ export default function AdminProducts() {
             <ShoppingBag className="w-3.5 h-3.5" />
             Hardware & Products CMS
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Product Catalog Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+            Product Catalog Management
+            <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 font-mono">
+              {filteredProducts.length} of {products.length} Products
+            </span>
+          </h1>
           <p className="text-slate-400 text-xs mt-1">Manage enterprise hardware, specifications, datasheets, and brands.</p>
         </div>
 
@@ -129,7 +140,13 @@ export default function AdminProducts() {
               {filteredProducts.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-900/50 transition">
                   <td className="p-4 flex items-center gap-3">
-                    <img src={p.image} alt={p.name} className="w-12 h-10 object-cover rounded-lg" />
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="w-12 h-10 object-cover rounded-lg flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-10 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-500 flex-shrink-0">
+                        <ShoppingBag className="w-5 h-5 text-slate-600" />
+                      </div>
+                    )}
                     <div>
                       <div className="font-bold text-white text-sm">{p.name}</div>
                       <div className="text-slate-400 text-[11px] line-clamp-1 max-w-xs">{p.tagline}</div>
@@ -265,6 +282,92 @@ export default function AdminProducts() {
                   }
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Recommended Applications (Comma-separated)</label>
+                <input
+                  type="text"
+                  value={editingProduct.applications?.join(", ") || ""}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      applications: e.target.value.split(",").map((x) => x.trim()).filter(Boolean),
+                    })
+                  }
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Corporate Offices, Commercial Buildings, Manufacturing Units"
+                />
+              </div>
+
+              {/* Technical Specifications Editor */}
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-200 font-bold flex items-center gap-2">
+                    <span>Technical Specifications</span>
+                    <span className="text-[10px] text-blue-400 font-mono">
+                      ({Object.keys(editingProduct.specs || {}).length} Parameters)
+                    </span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="Parameter (e.g. Image Sensor)"
+                    value={newSpecKey}
+                    onChange={(e) => setNewSpecKey(e.target.value)}
+                    className="col-span-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Value (e.g. 1/2.7 inch 2MP CMOS)"
+                    value={newSpecVal}
+                    onChange={(e) => setNewSpecVal(e.target.value)}
+                    className="col-span-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newSpecKey.trim()) return;
+                      setEditingProduct({
+                        ...editingProduct,
+                        specs: {
+                          ...(editingProduct.specs || {}),
+                          [newSpecKey.trim()]: newSpecVal.trim(),
+                        },
+                      });
+                      setNewSpecKey("");
+                      setNewSpecVal("");
+                    }}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs"
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto divide-y divide-slate-800 border border-slate-800 rounded-xl">
+                  {Object.entries(editingProduct.specs || {}).map(([k, v]) => (
+                    <div key={k} className="p-2 flex items-center justify-between text-xs hover:bg-slate-900/50">
+                      <div className="grid grid-cols-3 gap-2 flex-1">
+                        <span className="font-semibold text-slate-300 truncate">{k}</span>
+                        <span className="col-span-2 text-slate-400 truncate">{v}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...editingProduct.specs };
+                          delete updated[k];
+                          setEditingProduct({ ...editingProduct, specs: updated });
+                        }}
+                        className="text-rose-400 hover:text-rose-300 ml-2"
+                        title="Remove parameter"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <FileUploader
