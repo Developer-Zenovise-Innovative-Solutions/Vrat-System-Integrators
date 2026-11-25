@@ -363,7 +363,7 @@ export default function Blog() {
               {/* Tags */}
               <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold text-slate-400">TAGS:</span>
-                {selectedBlog.tags.map((t, i) => (
+                {(selectedBlog.tags || []).map((t, i) => (
                   <span key={i} className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
                     #{t}
                   </span>

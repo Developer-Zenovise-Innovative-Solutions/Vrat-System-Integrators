@@ -113,16 +113,18 @@ export default function Gallery() {
   const [sliderPos, setSliderPos] = useState(50);
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
 
-  const cmsGalleryItems: GalleryItem[] = (mediaItems || []).map((m) => ({
-    id: m.id,
-    title: m.title,
-    category: m.category || "Commercial",
-    imageUrl: m.url,
-    location: "Installation Site, India",
-    techTags: ["Installed Solution"],
-  }));
+  const cmsGalleryItems: GalleryItem[] = (mediaItems || [])
+    .filter((m) => m && (m.type === "image" || !m.type))
+    .map((m: any) => ({
+      id: m.id,
+      title: m.altText || m.filename || m.title || "Site Installation",
+      category: m.category || "Commercial",
+      image: m.url || m.imageUrl || "",
+      location: m.location || "Installation Site, India",
+      tags: Array.isArray(m.tags) ? m.tags : Array.isArray(m.techTags) ? m.techTags : ["Installed Solution"],
+    }));
 
-  const allItems = [...cmsGalleryItems, ...GALLERY_DATA];
+  const allItems: GalleryItem[] = [...cmsGalleryItems, ...GALLERY_DATA];
 
   const categories = [
     "All",
@@ -292,7 +294,7 @@ export default function Gallery() {
                   {item.title}
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
-                  {item.tags.map((t, i) => (
+                  {(item.tags || []).map((t, i) => (
                     <span key={i} className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">
                       #{t}
                     </span>
