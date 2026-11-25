@@ -1793,6 +1793,36 @@ export const INITIAL_ABOUT_PAGE_DATA: AboutPageData = {
       "Technical Support Engineers",
       "Customer Relationship Executives",
     ],
+    experts: [
+      {
+        id: "exp-1",
+        name: "Nimesh Patel",
+        designation: "Founder & Managing Director",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face&auto=format",
+        bio: "Over 18 years of leadership in electronic security systems, commercial CCTV infrastructure, and enterprise system integration."
+      },
+      {
+        id: "exp-2",
+        name: "Rajesh Sharma",
+        designation: "Chief Technology Officer & Head of Engineering",
+        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&h=500&fit=crop&crop=face&auto=format",
+        bio: "Specialist in AI surveillance algorithms, high-density optical fiber networking, and industrial VMS backbones."
+      },
+      {
+        id: "exp-3",
+        name: "Suresh Nair",
+        designation: "Senior Fire Safety & Life-Safety Consultant",
+        image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=500&h=500&fit=crop&crop=face&auto=format",
+        bio: "Certified NFPA fire systems consultant leading addressable fire alarm, voice evacuation, and building safety compliance."
+      },
+      {
+        id: "exp-4",
+        name: "Pooja Mehta",
+        designation: "Lead Project Architect & Operations Manager",
+        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&h=500&fit=crop&crop=face&auto=format",
+        bio: "Directs turnkey deployment milestones, OEM compliance verification, and on-time commissioning for institutional clients."
+      }
+    ],
   },
   certifications: {
     badge: "Certifications & Compliance",

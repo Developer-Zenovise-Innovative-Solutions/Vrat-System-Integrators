@@ -425,6 +425,14 @@ export type AboutPageSectionId =
   | "sustainability"
   | "cta";
 
+export interface TeamExpert {
+  id: string;
+  name: string;
+  designation: string;
+  image: string;
+  bio?: string;
+}
+
 export interface AboutPageData {
   sectionOrder: AboutPageSectionId[];
   sectionVisibility: Record<AboutPageSectionId, boolean>;
@@ -481,7 +489,8 @@ export interface AboutPageData {
     description: string;
     teamHeading: string;
     teamSubtitle: string;
-    roles: string[];
+    roles?: string[];
+    experts?: TeamExpert[];
   };
   certifications: {
     badge: string;

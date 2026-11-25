@@ -140,7 +140,6 @@ export default function Services() {
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-                  <span className="absolute top-4 left-4 text-3xl">{service.icon}</span>
                 </div>
                 <div className="p-7 flex flex-col flex-1">
                   <h3 className="font-bold text-slate-900 text-xl mb-3">{service.title}</h3>

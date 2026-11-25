@@ -71,6 +71,8 @@ import {
   Edit3,
   Layers,
   FolderTree,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 const HOME_SECTION_METADATA: Record<
@@ -3431,24 +3433,149 @@ export default function AdminPagesBuilder() {
                           </div>
                         </div>
 
-                        <div>
-                          <label className="block text-[11px] text-slate-400 mb-2">Certified Expert Roles (8 Badges)</label>
-                          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                            {aboutData.leadership.roles.map((r, i) => (
-                              <input
-                                key={i}
-                                type="text"
-                                value={r}
-                                onChange={(e) => {
-                                  const newRoles = [...aboutData.leadership.roles];
-                                  newRoles[i] = e.target.value;
-                                  setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, roles: newRoles } });
-                                }}
-                                className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-blue-400 font-semibold"
-                              />
+                        {/* Dynamic Team Experts Manager */}
+                        <div className="pt-2 border-t border-slate-800">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <label className="block text-xs font-bold text-white">Team Experts & Leaders</label>
+                              <span className="text-[11px] text-slate-400">Add, edit, or remove company experts (Photo, Name, Designation)</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const currentExperts = aboutData.leadership.experts || INITIAL_ABOUT_PAGE_DATA.leadership.experts || [];
+                                const newExpert = {
+                                  id: "exp-" + Date.now(),
+                                  name: "New Expert Name",
+                                  designation: "Security Systems Engineer",
+                                  image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=500&fit=crop&crop=face&auto=format",
+                                  bio: "Experienced system integrator specializing in enterprise physical security and communications.",
+                                };
+                                setAboutData({
+                                  ...aboutData,
+                                  leadership: {
+                                    ...aboutData.leadership,
+                                    experts: [...currentExperts, newExpert],
+                                  },
+                                });
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Add Expert
+                            </button>
+                          </div>
+
+                          <div className="space-y-3">
+                            {((aboutData.leadership.experts && aboutData.leadership.experts.length > 0)
+                              ? aboutData.leadership.experts
+                              : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || [])
+                            ).map((expert, idx) => (
+                              <div key={expert.id || idx} className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={expert.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face&auto=format"}
+                                    alt={expert.name}
+                                    className="w-12 h-12 rounded-xl object-cover border border-slate-700 bg-slate-800 flex-shrink-0"
+                                  />
+                                  <div className="grid sm:grid-cols-2 gap-2.5 flex-1">
+                                    <div>
+                                      <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Person Name *</label>
+                                      <input
+                                        type="text"
+                                        value={expert.name}
+                                        onChange={(e) => {
+                                          const list = [...((aboutData.leadership.experts && aboutData.leadership.experts.length > 0) ? aboutData.leadership.experts : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []))];
+                                          list[idx] = { ...list[idx], name: e.target.value };
+                                          setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, experts: list } });
+                                        }}
+                                        placeholder="e.g. Nimesh Patel"
+                                        className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-white font-semibold"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Designation / Role *</label>
+                                      <input
+                                        type="text"
+                                        value={expert.designation}
+                                        onChange={(e) => {
+                                          const list = [...((aboutData.leadership.experts && aboutData.leadership.experts.length > 0) ? aboutData.leadership.experts : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []))];
+                                          list[idx] = { ...list[idx], designation: e.target.value };
+                                          setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, experts: list } });
+                                        }}
+                                        placeholder="e.g. Managing Director & Principal Consultant"
+                                        className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-blue-400 font-medium"
+                                      />
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const list = [...((aboutData.leadership.experts && aboutData.leadership.experts.length > 0) ? aboutData.leadership.experts : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []))];
+                                      list.splice(idx, 1);
+                                      setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, experts: list } });
+                                    }}
+                                    className="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                                    title="Delete Person"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+
+                                <div className="grid sm:grid-cols-2 gap-2.5">
+                                  <div>
+                                    <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Photo Image URL</label>
+                                    <input
+                                      type="text"
+                                      value={expert.image}
+                                      onChange={(e) => {
+                                        const list = [...((aboutData.leadership.experts && aboutData.leadership.experts.length > 0) ? aboutData.leadership.experts : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []))];
+                                        list[idx] = { ...list[idx], image: e.target.value };
+                                        setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, experts: list } });
+                                      }}
+                                      placeholder="https://images.unsplash.com/..."
+                                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-[11px] text-slate-300 font-mono"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-0.5">Brief Bio / Credentials</label>
+                                    <input
+                                      type="text"
+                                      value={expert.bio || ""}
+                                      onChange={(e) => {
+                                        const list = [...((aboutData.leadership.experts && aboutData.leadership.experts.length > 0) ? aboutData.leadership.experts : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []))];
+                                        list[idx] = { ...list[idx], bio: e.target.value };
+                                        setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, experts: list } });
+                                      }}
+                                      placeholder="Brief background..."
+                                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-[11px] text-slate-300"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
+
+                        {aboutData.leadership.roles && (
+                          <div className="pt-2 border-t border-slate-800">
+                            <label className="block text-[11px] text-slate-400 mb-2">Engineering Division Tags</label>
+                            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                              {aboutData.leadership.roles.map((r, i) => (
+                                <input
+                                  key={i}
+                                  type="text"
+                                  value={r}
+                                  onChange={(e) => {
+                                    const newRoles = [...aboutData.leadership.roles!];
+                                    newRoles[i] = e.target.value;
+                                    setAboutData({ ...aboutData, leadership: { ...aboutData.leadership, roles: newRoles } });
+                                  }}
+                                  className="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-blue-400 font-semibold"
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

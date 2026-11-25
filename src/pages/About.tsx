@@ -264,34 +264,53 @@ export default function About() {
         );
 
       case "timeline":
+        const timelineItems = activeData.timeline?.items || INITIAL_ABOUT_PAGE_DATA.timeline.items;
         return (
-          <section key="timeline" className="py-24 bg-[#0A1628]">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <AnimSection className="text-center mb-16">
-                <span className="text-blue-300 text-sm font-semibold uppercase tracking-widest">
+          <section key="timeline" className="py-20 bg-[#0A1628] overflow-hidden">
+            <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+              <AnimSection className="text-center mb-14">
+                <span className="text-blue-400 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
                   {activeData.timeline?.badge || "Company Timeline"}
                 </span>
-                <h2 className="font-serif text-4xl text-white mt-3">
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white mt-3 mb-3">
                   {activeData.timeline?.heading || "Our Growth Journey"}
                 </h2>
+                <p className="text-blue-200/70 text-sm max-w-2xl mx-auto">
+                  From a dedicated electronic security installer in 2007 to an enterprise turnkey AI system integrator in 2026.
+                </p>
               </AnimSection>
 
-              <div className="relative">
-                <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-blue-900" />
-                <div className="space-y-8">
-                  {(activeData.timeline?.items || INITIAL_ABOUT_PAGE_DATA.timeline.items).map((t, i) => (
-                    <AnimSection key={i}>
-                      <div className="flex gap-8 items-center">
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-blue-600/40">
-                            {t.year}
-                          </div>
+              {/* Horizontal Timeline - All 7 Milestones Visible Simultaneously (No Scroll) */}
+              <div className="relative pt-2">
+                {/* Connecting horizontal glowing bar across nodes on desktop */}
+                <div className="hidden lg:block absolute top-[28px] left-[6%] right-[6%] h-1 bg-gradient-to-r from-blue-700 via-blue-500 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)] z-0" />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 xl:gap-4 relative z-10">
+                  {timelineItems.map((t, i) => (
+                    <div key={i} className="flex flex-col items-center h-full group">
+                      {/* Node Badge */}
+                      <div className="relative z-10 mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900 text-white font-extrabold text-sm flex items-center justify-center shadow-lg shadow-blue-600/40 border-2 border-blue-400/50 group-hover:scale-105 group-hover:border-cyan-300 transition-all duration-300">
+                          {t.year}
                         </div>
-                        <div className="bg-white/5 rounded-xl p-5 flex-1 border border-white/10 hover:border-blue-500/30 transition">
-                          <p className="text-blue-100/90 text-sm leading-relaxed">{t.event}</p>
+                        <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 absolute -bottom-1 left-1/2 -translate-x-1/2 shadow-[0_0_8px_#22d3ee] animate-pulse" />
+                      </div>
+
+                      {/* Milestone Card with Breathing Space */}
+                      <div className="w-full flex-1 bg-white/[0.06] backdrop-blur-md rounded-2xl p-3.5 xl:p-4 border border-white/10 hover:border-blue-500/50 hover:bg-white/[0.1] transition-all duration-300 flex flex-col justify-between shadow-lg">
+                        <div>
+                          {/* Single-line Milestone Badge strictly non-wrapping */}
+                          <div className="mb-2 pb-2 border-b border-white/10 flex items-center justify-between">
+                            <span className="text-[10px] xl:text-[11px] font-bold text-cyan-300 tracking-wider uppercase whitespace-nowrap bg-cyan-500/15 border border-cyan-500/30 px-2 py-0.5 rounded shrink-0 inline-block">
+                              Milestone #{i + 1}
+                            </span>
+                          </div>
+                          <p className="text-blue-100/90 text-xs leading-relaxed">
+                            {t.event}
+                          </p>
                         </div>
                       </div>
-                    </AnimSection>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -327,41 +346,94 @@ export default function About() {
         );
 
       case "leadership":
+        const expertsList = (activeData.leadership?.experts && activeData.leadership.experts.length > 0)
+          ? activeData.leadership.experts
+          : (INITIAL_ABOUT_PAGE_DATA.leadership.experts || []);
+
         return (
           <div key="leadership">
-            <section className="py-24 bg-white">
+            <section className="py-20 bg-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <AnimSection className="text-center mb-12">
-                  <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">
+                  <span className="text-blue-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-blue-50 border border-blue-200">
                     {activeData.leadership?.badge || "Leadership"}
                   </span>
-                  <h2 className="font-serif text-4xl text-slate-900 mt-3 mb-5">
+                  <h2 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 mt-3 mb-4">
                     {activeData.leadership?.heading || "Leadership That Inspires Confidence"}
                   </h2>
-                  <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm sm:text-base">
                     {activeData.leadership?.description || INITIAL_ABOUT_PAGE_DATA.leadership.description}
                   </p>
                 </AnimSection>
               </div>
             </section>
 
-            <section id="team" className="py-12 bg-white border-t border-slate-100">
+            <section id="team" className="py-16 bg-slate-50 border-t border-slate-200">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <AnimSection className="text-center mb-10">
-                  <h3 className="font-bold text-slate-900 text-2xl mb-3">
+                <AnimSection className="text-center mb-12">
+                  <span className="text-blue-600 text-xs font-bold uppercase tracking-widest">
+                    Core Technical Leadership
+                  </span>
+                  <h3 className="font-serif text-3xl font-bold text-slate-900 mt-2 mb-3">
                     {activeData.leadership?.teamHeading || "Meet Our Experts"}
                   </h3>
                   <p className="text-slate-600 text-sm max-w-xl mx-auto">
                     {activeData.leadership?.teamSubtitle || "Together, they ensure every project is delivered on time, within budget, and to the highest quality standards."}
                   </p>
                 </AnimSection>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-                  {(activeData.leadership?.roles || INITIAL_ABOUT_PAGE_DATA.leadership.roles).map((role, i) => (
-                    <div key={i} className="bg-blue-50/80 rounded-xl p-4 text-center border border-blue-100 shadow-sm hover:border-blue-300 transition">
-                      <div className="text-blue-700 text-xs font-semibold leading-snug">{role}</div>
-                    </div>
+
+                {/* Dynamic Expert Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {expertsList.map((expert, idx) => (
+                    <AnimSection key={expert.id || idx}>
+                      <div className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
+                        <div className="relative h-64 overflow-hidden bg-slate-100">
+                          <img
+                            src={expert.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=face&auto=format"}
+                            alt={expert.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span className="text-white text-xs font-semibold flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                              Verified VRAT Specialist
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-6 flex flex-col flex-1">
+                          <h4 className="font-bold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">
+                            {expert.name}
+                          </h4>
+                          <div className="text-blue-600 font-semibold text-xs mt-1 mb-2">
+                            {expert.designation}
+                          </div>
+                          {expert.bio && (
+                            <p className="text-slate-500 text-xs leading-relaxed flex-1 line-clamp-3">
+                              {expert.bio}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </AnimSection>
                   ))}
                 </div>
+
+                {/* Integrated Roles Division Badges */}
+                {activeData.leadership?.roles && activeData.leadership.roles.length > 0 && (
+                  <div className="mt-14 pt-8 border-t border-slate-200">
+                    <div className="text-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+                      Specialized Engineering Divisions
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {activeData.leadership.roles.map((role, i) => (
+                        <span key={i} className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold shadow-sm hover:border-blue-300 transition">
+                          {role}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
           </div>

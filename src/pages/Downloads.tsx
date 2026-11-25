@@ -448,25 +448,15 @@ export default function Downloads() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="pt-2">
                 <button
                   onClick={() => {
                     handleDownload(previewDoc);
                     setPreviewDoc(null);
                   }}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" /> Download Now
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard?.writeText(window.location.href);
-                    alert("Document link copied to clipboard!");
-                  }}
-                  className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition"
-                  title="Share"
-                >
-                  <Share2 className="w-4 h-4" />
                 </button>
               </div>
             </div>

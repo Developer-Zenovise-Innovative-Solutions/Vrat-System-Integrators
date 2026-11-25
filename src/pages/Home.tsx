@@ -338,7 +338,6 @@ export default function Home() {
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
-                        <span className="absolute top-4 left-4 text-2xl">{service.icon}</span>
                       </div>
                       <div className="p-6 flex flex-col flex-1">
                         <h3 className="font-bold text-slate-900 text-lg mb-2">{service.title}</h3>
